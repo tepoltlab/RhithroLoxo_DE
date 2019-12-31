@@ -1,13 +1,17 @@
 # Ignore everything
-*
+/*
 
 # But not these files...
 !.gitignore
 !README.md
-!Snakefile
+!/Snakefile
+!/metadata
+!/scripts
+!/envs
+!/vis
+!/jupyter_notebooks
 
 # ...even if they are in subdirectories
 #!*/
 
 # if the files to be tracked are in subdirectories
-

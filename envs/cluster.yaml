@@ -1,0 +1,161 @@
+__default__: #These are the default values! If a rule doesn't exist these values will be used.  
+    system: 'slurm' #check if system is defined below
+    account: ztobias #requred
+    time: 20 # minutes
+    mem: 10 # GB
+    threads: 1 # Number of Threads
+    queue: compute # QUEUE USED
+    nodes: 1 # NUMBER OF NODES
+    #output: logs/cluster/{rule}.{wildcards}.out
+    command_options:
+        slurm:
+            command: "sbatch --parsable"
+            key_mapping:
+            name: "--job-name={}"
+            threads: "-n {}"
+            mem: "--mem={}g"
+            account: "--account={}"
+            queue: "--partition={}"
+            time: "--time={}"
+            nodes: "-N {}"
+            #output: "--output={}"
+
+fastqc: 
+    queue: compute
+    threads: 4
+    mem: 10
+    time: 10
+
+blast2loxo:
+    queue: compute
+    threads: 35
+    mem: 40
+    time: 120
+    
+rhithro_txm:
+    queue: scavenger
+    threads: 35
+    mem: 180
+    time: 1400
+
+prep_ref:
+    queue: scavenger
+    threads: 16
+    mem: 40
+    time: 60
+
+quant_cat:
+    queue: scavenger
+    threads: 16
+    mem: 40
+    time: 60
+    
+get_nr:
+    queue: scavenger
+    threads: 1
+    mem: 10
+    time: 40
+
+get_nt:
+    queue: scavenger
+    threads: 1
+    mem: 10
+    time: 120
+
+blast_contam:
+    queue: scavenger
+    threads: 35
+    mem: 100
+    time: 40
+
+download_db:
+    queue: scavenger
+    threads: 1
+    mem: 80
+    time: 240
+    
+diamond_db:
+    queue: scavenger
+    threads: 1
+    mem: 80
+    time: 240
+
+transdecoder:
+    queue: scavenger
+    threads: 1
+    mem: 20
+    time: 60
+
+prep_rhithro_ref:
+    queue: scavenger
+    threads: 16
+    mem: 40
+    time: 60
+
+quant:
+    queue: scavenger
+    threads: 16
+    mem: 40
+    time: 120
+
+diamondx_annot:
+    queue: scavenger
+    threads: 36
+    mem: 180
+    time: 1380
+    
+diamondp_annot:
+    queue: scavenger
+    threads: 36
+    mem: 180
+    time: 1380
+
+diamondx_xml:
+    queue: scavenger
+    threads: 36
+    mem: 180
+    time: 1380
+
+hmmscan:
+    queue: scavenger
+    threads: 36
+    mem: 180
+    time: 1380
+
+#rule loxo_txm:
+#    queue: compute
+#    threads: 35
+#    mem: 180
+#    time: 1440
+
+#salmon_index: 
+#    queue: compute
+#    threads: 1
+#    mem: 5
+#    time: 5
+#
+#salmon_quant: 
+#    queue:  compute
+#    threads: 1
+#    mem: 5
+#    time: 120
+#
+#salmon_merge:
+#    queue:  compute
+#    threads: 1
+#    mem: 5
+#    time: 1
+
+#diamond_db:
+#    queue: scavenger
+#    threads: 1
+#    mem: 80
+#    time: 240
+#    
+#diamond:
+#    queue: scavenger
+#    threads: 35
+#    mem: 180
+#    time: 600
+    
+
