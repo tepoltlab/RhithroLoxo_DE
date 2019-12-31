@@ -4,12 +4,12 @@
 # But not these files...
 !.gitignore
 !README.md
-!/Snakefile
+!Snakefile
 !/metadata
 !/scripts
 !/envs
 !/vis
-!/jupyter_notebooks
+!/juptyer_notebooks
 
 # ...even if they are in subdirectories
 #!*/
