@@ -34,12 +34,16 @@ RHITHRO_TXM_IDX = 'txms/rhithro/rhithro_txm_long_clean.fasta.salmon_quasi.idx'
 DE_SAMPLES = ['AP_C_1','AP_C_2','AP_C_3','AP_C_4','AP_C_5','AP_C_6','AP_P_1','AP_P_2','AP_P_3','AP_P_6','FP_C_10','FP_C_11','FP_C_12','FP_C_13','FP_C_5','FP_C_9','FP_P_10','FP_P_4','FP_P_5','FP_P_7','FP_P_8','FP_P_9','LA_C_1','LA_C_2','LA_C_3','LA_C_4','LA_C_6','LA_C_8','LA_P_1','LA_P_2','MA_C_1','MA_C_2','MA_C_4','MD_C_10','MD_C_11','MD_C_12','MD_C_1','MD_C_4','MD_C_7','MD_P_1','ML_C_10','ML_C_2','ML_C_3','ML_C_5','ML_C_7','ML_C_9','ML_P_1','ML_P_2','NH_C_11','NH_C_12','NH_C_13','NH_C_5','NH_C_8','NH_C_9','NH_P_1','NH_P_2','NH_P_3','NH_P_4','NH_P_5','NH_P_6','NJ_C_10','NJ_C_11','NJ_C_12','NJ_C_13','NJ_C_14','NJ_C_6','NJ_P_1','NJ_P_3','NJ_P_4','NJ_P_5','NJ_P_6','NJ_P_7','SC_C_12','SC_C_14','SC_C_2','SC_C_6','SC_C_7','SC_C_9','SC_P_1','SC_P_2','SC_P_3']
 QUANT_OUT = expand('outputs/quant/{wc1}/quant.sf', wc1=DE_SAMPLES)
 QUANT_MAT = expand('outputs/quant/salmon.isoform.{wc1}', wc1 = ['counts.matrix','TPM.not_cross_norm'])
-DOWNLOAD_DB_OUT = expand('db/{wc1}', wc1=['uniref90.fasta.gz','uniprot_sprot.pep','Trinotate.sqlite','uniprot_trembl.fasta.gz','nr.gz','Pfam-A.hmm.h3f','uniprot_sprot.fasta.gz','refseq_complete.faa.gz'])
+DOWNLOAD_DB_OUT = expand('db/{wc1}', wc1=['uniref90.fasta.gz','uniprot_sprot.pep','uniprot_trembl.fasta.gz','nr.gz','Pfam-A.hmm.h3f','uniprot_sprot.fasta.gz','refseq_complete.faa.gz'])
 DIAMOND_DB = expand('db/{wc1}.dmnd', wc1 = ['nr','uniref90','trembl','sprot'])
 DIAMONDP_ANNOT_OUT = expand('outputs/trinotate/diamondp.{wc1}.tsv', wc1=['nr','uniref90','trembl','sprot'])
 DIAMONDX_ANNOT_OUT = expand('outputs/trinotate/diamondx.{wc1}.tsv', wc1=['nr','uniref90','trembl','sprot'])
 DIAMONDX_XML = 'outputs/trinotate/diamondx.nr.xml'
 HMMSCAN_OUT = 'outputs/trinotate/hmmscan.out'
+GENE_TRANS_MAP = 'txms/rhithro/rhithro_txm_long_clean.gene_trans_map'
+TRINOTATE_INIT = 'outputs/track/trinotate_init.done'
+TRINOTATE_LOAD = 'outputs/track/trinotate_load.done'
+TRINOTATE_ANNOT = 'outputs/trinotate/trinotate_annotations.tsv'
 
 #DIAMOND_ANNOT_OUT_SPLIT = expand('outputs/trinotate/{wc2}/diamond{wc3}.{wc1}.{wc2}.tsv',  wc1=PADDED_RANGE2, wc2=['nr','uniref90','trembl','sprot'], wc3=['x','p'])
 #CLEAN_CHUNKS_NT = expand('txms/rhithro/clean_chunks/rhithro_txm_long_clean.{wc1}.fasta', wc1=PADDED_RANGE2)
@@ -49,7 +53,7 @@ HMMSCAN_OUT = 'outputs/trinotate/hmmscan.out'
 ## GET SNAKEMAKEY
 
 rule all:
-    input: FASTQC_ZIP, FASTQC_HTML, LOXO_DB, LOXO_BLAST_RESULTS, CONTAM_LIST, CONTAM_RATES, CLEANED_READS, RHITHRO_CLEAN_CAT, RHITHRO_TXMS, RHITHRO_TXM_GENETRANSMAPS, PRELIM_TXM_IDXS, QUANT_CAT, EXN50, N50, TXM_LONG, DIRTY_CHUNKS, BLAST_CONTAM, BLAST_CONTAM_MERGED, BLAST_CONTAM_LIST, TXM_LONG_CLEAN, TRANSDECODER_OUT, RHITHRO_TXM_IDX, QUANT_OUT, QUANT_MAT, DOWNLOAD_DB_OUT, DIAMOND_DB, DIAMONDP_ANNOT_OUT, DIAMONDX_ANNOT_OUT, DIAMONDX_XML, HMMSCAN_OUT,
+    input: FASTQC_ZIP, FASTQC_HTML, LOXO_DB, LOXO_BLAST_RESULTS, CONTAM_LIST, CONTAM_RATES, CLEANED_READS, RHITHRO_CLEAN_CAT, RHITHRO_TXMS, RHITHRO_TXM_GENETRANSMAPS, PRELIM_TXM_IDXS, QUANT_CAT, EXN50, N50, TXM_LONG, DIRTY_CHUNKS, BLAST_CONTAM, BLAST_CONTAM_MERGED, BLAST_CONTAM_LIST, TXM_LONG_CLEAN, TRANSDECODER_OUT, RHITHRO_TXM_IDX, QUANT_OUT, QUANT_MAT, DOWNLOAD_DB_OUT, DIAMOND_DB, DIAMONDP_ANNOT_OUT, DIAMONDX_ANNOT_OUT, DIAMONDX_XML, HMMSCAN_OUT, GENE_TRANS_MAP, TRINOTATE_INIT, TRINOTATE_LOAD, TRINOTATE_ANNOT,
     
 #DIAMOND_ANNOT_OUT_SPLIT
 #CLEAN_CHUNKS_NT
@@ -609,7 +613,7 @@ rule diamondx_xml: #for blast2go
 rule hmmscan:
     input:
         aa = 'outputs/transdecoder/rhithro_txm_long_clean.fasta.transdecoder.pep',
-        pfam = DOWNLOAD_DB_OUT #for tracking
+        pfam = DOWNLOAD_DB_OUT #for tracking. #Trinotate.sqlite removed from list b/c of later rules. assume download works
     output:
         hits = HMMSCAN_OUT
     conda:
@@ -623,6 +627,114 @@ rule hmmscan:
             db/Pfam-A.hmm {input.aa} 1> {log} 2>&1
         """
 
+rule make_gene_trans_map:
+    input:
+        TXM_LONG_CLEAN
+    output:
+        GENE_TRANS_MAP
+    conda:
+        "envs/trinity.yaml"
+    shell:
+        """
+        get_Trinity_gene_to_trans_map.pl {input} > {output}
+        """
+
+rule trinotate_init:
+    input:
+        txm_nt = TXM_LONG_CLEAN,
+        txm_aa = 'outputs/transdecoder/rhithro_txm_long_clean.fasta.transdecoder.pep',
+        gtm = GENE_TRANS_MAP,
+        sqlite = ancient('db/Trinotate.sqlite') #ignore timestamp. output is same as input so do wan't to run again
+    output:
+        touch(TRINOTATE_INIT)
+    conda:
+        "envs/trinotate.yaml"
+    log:
+        "logs/trinotate/trinotate_init.txt"
+    shell:
+        """
+        Trinotate {input.sqlite} init --gene_trans_map {input.gtm} \
+            --transcript_fasta {input.txm_nt} \
+            --transdecoder_pep {input.txm_aa} 1> {log} 2>&1
+        """
+
+rule trinotate_load:
+    input:
+        init_done = TRINOTATE_INIT,
+        sqlite = ancient('db/Trinotate.sqlite'),
+        blastp_sprot = 'outputs/trinotate/diamondp.sprot.tsv',
+        blastx_sprot = 'outputs/trinotate/diamondx.sprot.tsv',
+        blastp_trembl = 'outputs/trinotate/diamondp.trembl.tsv',
+        blastx_trembl = 'outputs/trinotate/diamondx.trembl.tsv',
+        blastp_uniref = 'outputs/trinotate/diamondp.uniref90.tsv',
+        blastx_uniref = 'outputs/trinotate/diamondx.uniref90.tsv',
+        blastp_nr = 'outputs/trinotate/diamondp.nr.tsv',
+        blastx_nr = 'outputs/trinotate/diamondx.nr.tsv',
+        hmmer = 'outputs/trinotate/hmmscan.out'
+    output:
+        touch(TRINOTATE_LOAD)
+    conda:
+        "envs/trinotate.yaml"
+    log:
+        "logs/trinotate/trinotate_load.txt"
+    shell:
+        """
+        Trinotate {input.sqlite} \
+            LOAD_swissprot_blastp \
+            {input.blastp_sprot} 1> {log} 2>&1
+        Trinotate {input.sqlite} \
+            LOAD_swissprot_blastx \
+            {input.blastx_sprot} 1>> {log} 2>&1
+        Trinotate {input.sqlite} \
+            LOAD_custom_blast \
+            --outfmt6 {input.blastp_trembl} \
+            --prog blastp \
+            --dbtype blastp_trembl 1>> {log} 2>&1
+        Trinotate {input.sqlite} \
+            LOAD_custom_blast \
+            --outfmt6 {input.blastx_trembl} \
+            --prog blastx \
+            --dbtype blastx_trembl 1>> {log} 2>&1
+        Trinotate {input.sqlite} \
+            LOAD_custom_blast \
+            --outfmt6 {input.blastp_uniref} \
+            --prog blastp \
+            --dbtype blastp_uniref90 1>> {log} 2>&1
+        Trinotate {input.sqlite} \
+            LOAD_custom_blast \
+            --outfmt6 {input.blastx_uniref} \
+            --prog blastx \
+            --dbtype blastx_uniref90 1>> {log} 2>&1
+        Trinotate {input.sqlite} \
+            LOAD_custom_blast \
+            --outfmt6 {input.blastp_nr} \
+            --prog blastp \
+            --dbtype blastp_nr 1>> {log} 2>&1
+        Trinotate {input.sqlite} \
+            LOAD_custom_blast \
+            --outfmt6 {input.blastx_nr} \
+            --prog blastx \
+            --dbtype blastx_nr 1>> {log} 2>&1
+        Trinotate {input.sqlite} \
+            LOAD_pfam \
+            {input.hmmer} 1>> {log} 2>&1
+        """
+
+rule trinotate_report:
+    input:
+        load_done = TRINOTATE_LOAD,
+        sqlite = ancient('db/Trinotate.sqlite') 
+    output:
+        trinotate_out = TRINOTATE_ANNOT
+    conda:
+        "envs/trinotate.yaml"
+    log:
+        "logs/trinotate/trinotate_annot.txt"
+    shell:
+        """
+        Trinotate {input.sqlite} report > {output.trinotate_out} 2> {log}
+        """
+
 
 
 #rule clean: #clean up
@@ -632,29 +744,3 @@ rule hmmscan:
 #        rm -rf logs/*
 #        rm -rf cat_seq/
 #        """
-      
-      
-
-#rule split_clean:
-#    input:
-#        txm = TXM_LONG_CLEAN,
-#        transdecoder = 'outputs/transdecoder/rhithro_txm_long_clean.fasta.transdecoder.pep'
-#    output:
-#        nt_chunks = CLEAN_CHUNKS_NT,
-#        aa_chunks = CLEAN_CHUNKS_AA
-#    params:
-#        dir = directory('txms/rhithro/clean_chunks')
-#    conda:
-#        "envs/pyfasta.yaml"
-#    shell:
-#        """
-#        mkdir -p {params.dir}
-#        pyfasta split -n 300 {input.txm}
-#        mv txms/rhithro/rhithro_txm_long_clean.*.fasta {params.dir}
-#        mv txms/rhithro/rhithro_txm_long_clean.fasta.flat {params.dir}
-#        mv txms/rhithro/rhithro_txm_long_clean.fasta.gdx {params.dir}
-#        pyfasta split -n 300 {input.transdecoder}
-#        mv outputs/transdecoder/rhithro_txm_long_clean.*.fasta.transdecoder.pep {params.dir}
-#        mv outputs/transdecoder/rhithro_txm_long_clean.fasta.transdecoder.pep.flat {params.dir}
-#        mv outputs/transdecoder/rhithro_txm_long_clean.fasta.transdecoder.pep.gdx {params.dir}
-#        """   

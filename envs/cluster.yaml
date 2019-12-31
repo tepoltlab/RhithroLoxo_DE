@@ -49,18 +49,6 @@ quant_cat:
     threads: 16
     mem: 40
     time: 60
-    
-get_nr:
-    queue: scavenger
-    threads: 1
-    mem: 10
-    time: 40
-
-get_nt:
-    queue: scavenger
-    threads: 1
-    mem: 10
-    time: 120
 
 blast_contam:
     queue: scavenger
