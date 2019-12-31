@@ -44,6 +44,8 @@ GENE_TRANS_MAP = 'txms/rhithro/rhithro_txm_long_clean.gene_trans_map'
 TRINOTATE_INIT = 'outputs/track/trinotate_init.done'
 TRINOTATE_LOAD = 'outputs/track/trinotate_load.done'
 TRINOTATE_ANNOT = 'outputs/trinotate/trinotate_annotations.tsv'
+TRINOTATE_STATS = 'outputs/trinotate/trinotate_stats.txt'
+
 
 #DIAMOND_ANNOT_OUT_SPLIT = expand('outputs/trinotate/{wc2}/diamond{wc3}.{wc1}.{wc2}.tsv',  wc1=PADDED_RANGE2, wc2=['nr','uniref90','trembl','sprot'], wc3=['x','p'])
 #CLEAN_CHUNKS_NT = expand('txms/rhithro/clean_chunks/rhithro_txm_long_clean.{wc1}.fasta', wc1=PADDED_RANGE2)
@@ -53,7 +55,7 @@ TRINOTATE_ANNOT = 'outputs/trinotate/trinotate_annotations.tsv'
 ## GET SNAKEMAKEY
 
 rule all:
-    input: FASTQC_ZIP, FASTQC_HTML, LOXO_DB, LOXO_BLAST_RESULTS, CONTAM_LIST, CONTAM_RATES, CLEANED_READS, RHITHRO_CLEAN_CAT, RHITHRO_TXMS, RHITHRO_TXM_GENETRANSMAPS, PRELIM_TXM_IDXS, QUANT_CAT, EXN50, N50, TXM_LONG, DIRTY_CHUNKS, BLAST_CONTAM, BLAST_CONTAM_MERGED, BLAST_CONTAM_LIST, TXM_LONG_CLEAN, TRANSDECODER_OUT, RHITHRO_TXM_IDX, QUANT_OUT, QUANT_MAT, DOWNLOAD_DB_OUT, DIAMOND_DB, DIAMONDP_ANNOT_OUT, DIAMONDX_ANNOT_OUT, DIAMONDX_XML, HMMSCAN_OUT, GENE_TRANS_MAP, TRINOTATE_INIT, TRINOTATE_LOAD, TRINOTATE_ANNOT,
+    input: FASTQC_ZIP, FASTQC_HTML, LOXO_DB, LOXO_BLAST_RESULTS, CONTAM_LIST, CONTAM_RATES, CLEANED_READS, RHITHRO_CLEAN_CAT, RHITHRO_TXMS, RHITHRO_TXM_GENETRANSMAPS, PRELIM_TXM_IDXS, QUANT_CAT, EXN50, N50, TXM_LONG, DIRTY_CHUNKS, BLAST_CONTAM, BLAST_CONTAM_MERGED, BLAST_CONTAM_LIST, TXM_LONG_CLEAN, TRANSDECODER_OUT, RHITHRO_TXM_IDX, QUANT_OUT, QUANT_MAT, DOWNLOAD_DB_OUT, DIAMOND_DB, DIAMONDP_ANNOT_OUT, DIAMONDX_ANNOT_OUT, DIAMONDX_XML, HMMSCAN_OUT, GENE_TRANS_MAP, TRINOTATE_INIT, TRINOTATE_LOAD, TRINOTATE_ANNOT, TRINOTATE_STATS,
     
 #DIAMOND_ANNOT_OUT_SPLIT
 #CLEAN_CHUNKS_NT
@@ -732,9 +734,25 @@ rule trinotate_report:
         "logs/trinotate/trinotate_annot.txt"
     shell:
         """
-        Trinotate {input.sqlite} report > {output.trinotate_out} 2> {log}
+        Trinotate {input.sqlite} \
+            report \
+            -E 1e-5 \
+            > {output.trinotate_out} 2> {log}
         """
 
+rule trinotate_stats:
+    input:
+        TRINOTATE_ANNOT
+    output:
+        TRINOTATE_STATS
+    conda:
+        "envs/trinotate.yaml"
+    log:
+        "logs/trinotate/trinotate_stats.txt"
+    shell:
+        """
+        count_table_fields.pl {input} > {output} 2> {log}
+        """
 
 
 #rule clean: #clean up
