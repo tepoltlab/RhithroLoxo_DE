@@ -4,9 +4,13 @@
 
 This GitHub repository contains all necessary scripts and metadata for the execution of a differential expression analysis pipeline of an RNA-seq dataset from experimental infections of various populations of the mud crab _Rhithropanopeus harrisi_ with differing degrees of historical exposure to the parasitic barnacle _Loxothylacus panopaei_. This repository serves as a supplement to my first-year research report entilted "TITLE HERE!". 
 
-The analysis starts from previously demultiplexed, trimmed, and cleaned 50bp, single-end sequence reads from an Illumina HiSeq 2000. It also utilizes a previously generated transcriptome for the parasite. These files can be made available upon request. Aside from these two exceptions, all steps of the pipeline are included herein and should be readily repeatable by readers familiar with basic programming in bash, R, and python. Most commands up through the generation of the differential expression matrix are executed using the workflow engine 'Snakemake', relying on packages installed in conda environments and a few borrowed or custom scripts. The major exception to this are those commands with the functional annotation package EnTAP v0.9.0-beta, which lacks a conda distribution and must be installed manually. Instructions for installation are included below in the section entitled "EnTAP Setup"; additional instructions can be found at <https://entap.readthedocs.io/en/latest/introduction.html>. 
+The analysis starts from previously demultiplexed, trimmed, and cleaned 50bp, single-end sequence reads from an Illumina HiSeq 2000. It also utilizes a previously generated transcriptome for the parasite. These files can be made available upon request. Aside from these two exceptions, all steps of the pipeline are included herein and should be readily repeatable by readers familiar with basic programming in bash, R, and python. Most commands up through the generation of the differential expression matrix are executed using the workflow engine 'Snakemake', relying on packages installed in conda environments and a few borrowed or custom scripts. The major exception to this are those commands with the functional annotation package EnTAP v0.9.0-beta, which lacks a conda distribution and must be installed manually. Instructions for installation are included below in the section below entitled "EnTAP Setup"; additional instructions can be found at <https://entap.readthedocs.io/en/latest/introduction.html>. 
 
-Something about Poseidon
+All steps in the pipeline were carried out on Poseidon, the high performance cluster (HPC) at Woods Hole Oceanographic Institution. 
+
+### Reproducibility statement
+
+
 
 ### How to execute Snakemake pipeline
 
@@ -19,7 +23,7 @@ Running the DESeq2 differential expression analysis interactively is great for f
 From within the main directory, lauch an interactive session on a compute node and activate the `deseq2` environment. (If you haven't already, use the `deseq2.yaml` file provided in `envs/` directory for creating the deseq2 conda environment within your home directory on the cluster, i.e.`conda env create -f envs/deseq2.yaml`.)
 
 ```
-srun -p compute --time=02:00:00 --ntasks-per-node 8 --mem 40gb --pty bash
+srun -p compute --time=04:00:00 --ntasks-per-node 8 --mem 40gb --pty bash
 conda activate deseq2
 export XDG_RUNTIME_DIR=""
 jupyter notebook --no-browser
@@ -71,7 +75,6 @@ Start interactive session in RhithroLoxo_DE directory
 ```
 srun -p scavenger --time=04:00:00 --ntasks-per-node=36 --mem=100gb --pty bash
 conda activate EnTAP
-
 ```
 
 Install EnTAP and compile according to instructions 
@@ -112,4 +115,4 @@ Then run the run_EnTAP.sh script
 sbatch run_EnTAP.sh
 ```
 
-
+This creates a myriad of output files in the `EnTAP/entap_outfiles` directory. The results are parsed in an accompanying jupyter notebook entitled `parse_annot.ipynb`.

@@ -26,6 +26,7 @@ uninfected	LA_C_3	../../reads_decontam/LA_C_3_clean.fq
 uninfected	LA_C_4	../../reads_decontam/LA_C_4_clean.fq
 uninfected	LA_C_6	../../reads_decontam/LA_C_6_clean.fq
 uninfected	LA_C_8	../../reads_decontam/LA_C_8_clean.fq
+loxo	LA_F_1	../../reads_decontam/LA_F_1_clean.fq
 infected	LA_P_1	../../reads_decontam/LA_P_1_clean.fq
 infected	LA_P_2	../../reads_decontam/LA_P_2_clean.fq
 uninfected	MA_C_1	../../reads_decontam/MA_C_1_clean.fq
@@ -37,6 +38,7 @@ infected	MD_C_12	../../reads_decontam/MD_C_12_clean.fq
 uninfected	MD_C_1	../../reads_decontam/MD_C_1_clean.fq
 uninfected	MD_C_4	../../reads_decontam/MD_C_4_clean.fq
 uninfected	MD_C_7	../../reads_decontam/MD_C_7_clean.fq
+loxo	MD_F_4	../../reads_decontam/MD_F_4_clean.fq
 infected	MD_P_1	../../reads_decontam/MD_P_1_clean.fq
 uninfected	ML_C_10	../../reads_decontam/ML_C_10_clean.fq
 uninfected	ML_C_2	../../reads_decontam/ML_C_2_clean.fq

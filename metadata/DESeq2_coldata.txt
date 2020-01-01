@@ -26,6 +26,7 @@ LA_C_3	LA	C	Native	F
 LA_C_4	LA	C	Native	M
 LA_C_6	LA	C	Native	F
 LA_C_8	LA	C	Native	F
+LA_F_1	para	F	para	para
 LA_P_1	LA	P	Native	M
 LA_P_2	LA	P	Native	M
 MA_C_1	MA	C	Absent	M
@@ -37,6 +38,7 @@ MD_C_12	MD	P	Invasive	F
 MD_C_1	MD	C	Invasive	M
 MD_C_4	MD	C	Invasive	M
 MD_C_7	MD	C	Invasive	F
+MD_F_4	para	F	para	para
 MD_P_1	MD	P	Invasive	M
 ML_C_10	ML	C	Invasive	M
 ML_C_2	ML	C	Invasive	M

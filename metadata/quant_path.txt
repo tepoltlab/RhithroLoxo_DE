@@ -26,6 +26,7 @@ LA_C_3/quant.sf
 LA_C_4/quant.sf
 LA_C_6/quant.sf
 LA_C_8/quant.sf
+LA_F_1/quant.sf
 LA_P_1/quant.sf
 LA_P_2/quant.sf
 MA_C_1/quant.sf
@@ -37,6 +38,7 @@ MD_C_12/quant.sf
 MD_C_1/quant.sf
 MD_C_4/quant.sf
 MD_C_7/quant.sf
+MD_F_4/quant.sf
 MD_P_1/quant.sf
 ML_C_10/quant.sf
 ML_C_2/quant.sf
