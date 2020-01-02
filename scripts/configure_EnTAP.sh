@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --partition=scavenger         # Queue selection
+#SBATCH --partition=compute         # Queue selection
 #SBATCH --job-name=EnTAP      # Job name
 #SBATCH --mail-type=ALL             # Mail events (BEGIN, END, FAIL, ALL)
 #SBATCH --mail-user=ztobias@whoi.edu  # Where to send mail
@@ -21,6 +21,7 @@ EnTAP --config -d /vortexfs1/scratch/ztobias/RhithroLoxo_DE/db/nr.gz \
     -d /vortexfs1/scratch/ztobias/RhithroLoxo_DE/db/uniprot_trembl.fasta.gz \
     -d /vortexfs1/scratch/ztobias/RhithroLoxo_DE/db/refseq_complete.faa.gz \
     -d /vortexfs1/scratch/ztobias/RhithroLoxo_DE/db/uniprot_sprot.fasta.gz \
+    -d /vortexfs1/scratch/ztobias/RhithroLoxo_DE/db/uniref90.fasta.gz \
     -t 35
 
 date

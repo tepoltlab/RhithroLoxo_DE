@@ -1,0 +1,9 @@
+diamond_exe_path=libs/diamond-0.9.9/bin/diamond
+rsem_exe_path=libs/RSEM-1.3.0
+genemarkst_exe_path=
+eggnog_sql_database=entap_outfiles/databases/eggnog.db
+eggnog_dmnd_database=entap_outfiles/bin/eggnog_proteins.dmnd
+interpro_exe_path=
+entap_database_sql_path=
+entap_database_bin_path=entap_outfiles/bin/entap_database.bin
+entap_graphing_script=src/entap_graphing.py

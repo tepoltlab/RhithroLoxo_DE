@@ -34,10 +34,11 @@ RHITHRO_TXM_IDX = 'txms/rhithro/rhithro_txm_long_clean.fasta.salmon_quasi.idx'
 DE_SAMPLES = ['AP_C_1','AP_C_2','AP_C_3','AP_C_4','AP_C_5','AP_C_6','AP_P_1','AP_P_2','AP_P_3','AP_P_6','FP_C_10','FP_C_11','FP_C_12','FP_C_13','FP_C_5','FP_C_9','FP_P_10','FP_P_4','FP_P_5','FP_P_7','FP_P_8','FP_P_9','LA_C_1','LA_C_2','LA_C_3','LA_C_4','LA_C_6','LA_C_8','LA_F_1','LA_P_1','LA_P_2','MA_C_1','MA_C_2','MA_C_4','MD_C_10','MD_C_11','MD_C_12','MD_C_1','MD_C_4','MD_C_7','MD_F_4','MD_P_1','ML_C_10','ML_C_2','ML_C_3','ML_C_5','ML_C_7','ML_C_9','ML_P_1','ML_P_2','NH_C_11','NH_C_12','NH_C_13','NH_C_5','NH_C_8','NH_C_9','NH_P_1','NH_P_2','NH_P_3','NH_P_4','NH_P_5','NH_P_6','NJ_C_10','NJ_C_11','NJ_C_12','NJ_C_13','NJ_C_14','NJ_C_6','NJ_P_1','NJ_P_3','NJ_P_4','NJ_P_5','NJ_P_6','NJ_P_7','SC_C_12','SC_C_14','SC_C_2','SC_C_6','SC_C_7','SC_C_9','SC_P_1','SC_P_2','SC_P_3']
 QUANT_OUT = expand('outputs/quant/{wc1}/quant.sf', wc1=DE_SAMPLES)
 QUANT_MAT = expand('outputs/quant/salmon.isoform.{wc1}', wc1 = ['counts.matrix','TPM.not_cross_norm'])
-DOWNLOAD_DB_OUT = expand('db/{wc1}', wc1=['uniref90.fasta.gz','uniprot_sprot.pep','uniprot_trembl.fasta.gz','nr.gz','Pfam-A.hmm.h3f','uniprot_sprot.fasta.gz','refseq_complete.faa.gz'])
-DIAMOND_DB = expand('db/{wc1}.dmnd', wc1 = ['nr','uniref90','trembl','sprot'])
-DIAMONDP_ANNOT_OUT = expand('outputs/trinotate/diamondp.{wc1}.tsv', wc1=['nr','uniref90','trembl','sprot'])
-DIAMONDX_ANNOT_OUT = expand('outputs/trinotate/diamondx.{wc1}.tsv', wc1=['nr','uniref90','trembl','sprot'])
+DOWNLOAD_DB_OUT = expand('db/{wc1}', wc1=['uniref90.fasta.gz','uniprot_trembl.fasta.gz','nr.gz','Pfam-A.hmm.h3f','uniprot_sprot.fasta.gz','refseq_complete.faa.gz'])
+TRINOTATE_SQL = ['db/Trinotate.sqlite','db/uniprot_sprot.dat.gz','db/uniprot_sprot.pep']
+DIAMOND_DB = expand('db/{wc1}.dmnd', wc1 = ['trembl','sprot'])
+DIAMONDP_ANNOT_OUT = expand('outputs/trinotate/diamondp.{wc1}.tsv', wc1=['trembl','sprot'])
+DIAMONDX_ANNOT_OUT = expand('outputs/trinotate/diamondx.{wc1}.tsv', wc1=['trembl','sprot'])
 DIAMONDX_XML = 'outputs/trinotate/diamondx.nr.xml'
 HMMSCAN_OUT = 'outputs/trinotate/hmmscan.out'
 GENE_TRANS_MAP = 'txms/rhithro/rhithro_txm_long_clean.gene_trans_map'
@@ -494,6 +495,20 @@ rule quant_mat:
 #get pfam and uniprot db and build Trinotate sqlite db. current releases as of 12/29/19
 #if i want to run EnTap, i have to redownload the sprot in fasta format (trinotate changed headers)
 
+rule build_trinotate_sql:
+    input:
+    output:
+        TRINOTATE_SQL
+    params:
+        dir = directory('db/')
+    conda:
+        "envs/trinotate.yaml"
+    shell:
+        """
+        cd {params.dir}
+        Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
+        """
+
 rule download_db:
     input:
     output:
@@ -521,9 +536,7 @@ rule download_db:
 
 rule diamond_db: 
     input:
-        nr = 'db/nr.gz',
         sprot = 'db/uniprot_sprot.pep',
-        uniref = 'db/uniref90.fasta.gz',
         trembl = 'db/uniprot_trembl.fasta.gz'
     output:
         DIAMOND_DB
@@ -534,8 +547,6 @@ rule diamond_db:
     shell:
         """
         cd {params.dir}
-        diamond makedb --in nr.gz --db nr
-        diamond makedb --in uniref90.fasta.gz --db uniref90
         diamond makedb --in uniprot_trembl.fasta.gz --db trembl
         diamond makedb --in uniprot_sprot.pep --db sprot
         """
@@ -668,10 +679,6 @@ rule trinotate_load:
         blastx_sprot = 'outputs/trinotate/diamondx.sprot.tsv',
         blastp_trembl = 'outputs/trinotate/diamondp.trembl.tsv',
         blastx_trembl = 'outputs/trinotate/diamondx.trembl.tsv',
-        blastp_uniref = 'outputs/trinotate/diamondp.uniref90.tsv',
-        blastx_uniref = 'outputs/trinotate/diamondx.uniref90.tsv',
-        blastp_nr = 'outputs/trinotate/diamondp.nr.tsv',
-        blastx_nr = 'outputs/trinotate/diamondx.nr.tsv',
         hmmer = 'outputs/trinotate/hmmscan.out'
     output:
         touch(TRINOTATE_LOAD)
@@ -697,26 +704,6 @@ rule trinotate_load:
             --outfmt6 {input.blastx_trembl} \
             --prog blastx \
             --dbtype blastx_trembl 1>> {log} 2>&1
-        Trinotate {input.sqlite} \
-            LOAD_custom_blast \
-            --outfmt6 {input.blastp_uniref} \
-            --prog blastp \
-            --dbtype blastp_uniref90 1>> {log} 2>&1
-        Trinotate {input.sqlite} \
-            LOAD_custom_blast \
-            --outfmt6 {input.blastx_uniref} \
-            --prog blastx \
-            --dbtype blastx_uniref90 1>> {log} 2>&1
-        Trinotate {input.sqlite} \
-            LOAD_custom_blast \
-            --outfmt6 {input.blastp_nr} \
-            --prog blastp \
-            --dbtype blastp_nr 1>> {log} 2>&1
-        Trinotate {input.sqlite} \
-            LOAD_custom_blast \
-            --outfmt6 {input.blastx_nr} \
-            --prog blastx \
-            --dbtype blastx_nr 1>> {log} 2>&1
         Trinotate {input.sqlite} \
             LOAD_pfam \
             {input.hmmer} 1>> {log} 2>&1

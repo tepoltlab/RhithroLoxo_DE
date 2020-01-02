@@ -86,6 +86,12 @@ quant:
     mem: 40
     time: 120
 
+build_trinotate_sql:
+    queue: compute
+    threads: 1
+    mem: 40
+    time: 120
+
 diamondx_annot:
     queue: scavenger
     threads: 36

@@ -10,7 +10,7 @@ All steps in the pipeline were carried out on Poseidon, the high performance clu
 
 ### Reproducibility statement
 
-
+This analysis was performed with ease of reproducibility in mind, both for my own sake in organizing the steps of the pipeline and for those interested in understanding the nuts and bolts or even replicating the results independently. That being said, there are some steps that may be influences by idiosyncracies of the configuration of the Poseidon HPC, specific versions of software, or release dates of reference sequence databases. 
 
 ### How to execute Snakemake pipeline
 
@@ -18,7 +18,7 @@ All steps in the pipeline were carried out on Poseidon, the high performance clu
 
 ### How to run DESeq2 analysis in a jupyter notebook on interactive node
 
-Running the DESeq2 differential expression analysis interactively is great for fine-tuning code and exploring the data. As such, I chose to perform this analysis from within a jupyter notebook instead of writing a .R script to be executed within the Snakemake pipeline. This notebook is called `DESeq2_RhithroLoxo.ipynb` and can be found in the `jupyter_notebooks/` directory within this repo. To harness the computational power of Poseidon (more RAM, multithreading, etc.), I launched a jupyter notebook from within an interactive session on a compute node, instead of from one of the two login nodes. Big thanks to Harriet Alexander for providing the instructions on her blog! <https://alexanderlabwhoi.github.io/post/2019-03-08_jpn_slurm/> I use a slightly modified approach, outlined below.
+Running the DESeq2 differential expression analysis interactively is great for fine-tuning code and exploring the data. As such, I chose to perform this analysis from within a jupyter notebook instead of writing a .R script to be executed within the Snakemake pipeline. This notebook is called `DESeq2_RhithroLoxo.ipynb` and can be found in the `jupyter_notebooks/` directory within this repo. To harness the computational power of Poseidon (more RAM, multithreading, etc.), I launched a jupyter notebook from within an interactive session on a compute node, instead of from one of the two login nodes. Big thanks to Harriet Alexander for providing the instructions on her blog! <https://alexanderlabwhoi.github.io/post/2019-03-08_jpn_slurm/> 
 
 From within the main directory, lauch an interactive session on a compute node and activate the `deseq2` environment. (If you haven't already, use the `deseq2.yaml` file provided in `envs/` directory for creating the deseq2 conda environment within your home directory on the cluster, i.e.`conda env create -f envs/deseq2.yaml`.)
 
@@ -26,10 +26,10 @@ From within the main directory, lauch an interactive session on a compute node a
 srun -p compute --time=04:00:00 --ntasks-per-node 8 --mem 40gb --pty bash
 conda activate deseq2
 export XDG_RUNTIME_DIR=""
-jupyter notebook --no-browser
+jupyter notebook --no-browser --8888
 ```
 
-This will lauch a jupyter notebook at a port listed at `http://localhost:8888/`. The number following 'localhost:' may vary. Remember or copy this number! You also need to take note of the name of the node you are running on. It should be in your prompt, i.e. if your prompt looks like this: `(deseq2) [ztobias@pn039 RhithroLoxo_DE]$`, then the node is pn039.
+This will lauch a jupyter notebook at a port listed at `http://localhost:8888/`. It will use a different port number if that one is already in use. Remember this number! You also need to take note of the name of the node you are running on. It should be in your prompt, i.e. if your prompt looks like this: `(deseq2) [ztobias@pn039 RhithroLoxo_DE]$`, then the node is pn039.
 
 On your home computer, add the following function to your `.bash_profile` to streamline opening the port.
 
@@ -37,7 +37,6 @@ On your home computer, add the following function to your `.bash_profile` to str
 function jptnode(){
     # Forwards port $1 from node $2 into port $1 on the local machine and listens to it
         ssh -t -t ztobias@poseidon.whoi.edu -L $1:localhost:$1 ssh $2 -L $1:localhost:$1
-        open -a "/Applications/Google Chrome.app" "http://localhost:$1"
 }
 ```
 
@@ -49,11 +48,11 @@ Now you can get the notebook running in a browser window on your local machine! 
 jptnode 8888 pn039
 ```
 
-If you get an error saying it can't listen because the port is busy, try starting the jupyter notebook specifying the port, i.e. `jupyter notebook --no-browser --port XXXX`, using a different number. Sometimes the ports are busy. I think they take a while to actually close if you're doing this repeatedly. Who knows. 
+If you get an error saying it can't listen because the port is busy, try starting the jupyter notebook specifying the port, i.e. `jupyter notebook --no-browser --port XXXX`, using a different number. Sometimes the ports are busy. I think they take a while to actually close if you're doing this repeatedly.
 
-Also, for some reason the browser might not launch automatically. Just type `localhost:XXXX` in the browser address bar, where XXXX is the port number, and you should be good to go. Also, when you type `jptnode ...`, it seems to actually log you into that node in the Terminal. Not sure why. Just minimize the window and ignore.
+Then go to your preferred web browser and type `localhost:8888` in the search bar (or whatever port number was assigned above). If you have configured your password, it will ask you for it. If not, you will have to set it on Poseidon by typing `jupyter notebook password`.
 
-Another thing to be aware of. The `deseq2` conda environment does not include the DESeq2 conda distribution. It has a lot of package conflicts. Instead, from within the `deseq2` environment, launch R and download DESeq2 using `biocmanager`. This only has to be done once. It will take a while and is quite verbose. Also download the R packages `apeglm`,`pheatmap`, and `VennDiagram`, which are either dependencies of DESeq2 or will be useful for plotting, etc. If it asks you to update packages, JUST SAY NO! The environment is already set up as we want it; no need to go muck it up.
+Another thing to be aware of. The `deseq2` conda environment does not include the DESeq2 conda distribution. It has a lot of package conflicts. Instead, from within the `deseq2` environment, launch R and download DESeq2 using `biocmanager`. This only has to be done once. It will take a while and is quite verbose. Also download the R packages `apeglm`, `ashr`,`pheatmap`, and `VennDiagram`, which are either dependencies of DESeq2 or will be useful for plotting, etc. If it asks you to update packages, JUST SAY NO! The environment is already set up as we want it; no need to go muck it up.
 
 ```
 R
@@ -64,6 +63,7 @@ BiocManager::install("DESeq2")
 BiocManager::install("apeglm")
 install.packages("pheatmap")
 install.packages("VennDiagram")
+install.packages("ashr")
 ```
 
 Okay now you're all set to actually run the DESeq2 analysis from the jupyter notebook! 
@@ -101,10 +101,12 @@ source ~/.bash_profile
 conda activate EnTAP
 ```
 
-Copy the configure_EnTAP.sh and run_EnTAP.sh scripts from scripts/ to EnTAP/, and run configure_EnTAP.sh
+Copy the configure_EnTAP.sh and run_EnTAP.sh scripts from scripts/ to EnTAP/. Then replace the existing `entap_config.txt` file with the one provided in `metadata/`. Then run configure_EnTAP.sh
 
 ```
 cp ../scripts/*EnTAP.sh ./
+rm entap_config.txt
+cp ../metadata/entap_config.txt ./
 sbatch configure_EnTAP.sh
 ```
 
