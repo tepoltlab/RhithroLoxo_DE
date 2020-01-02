@@ -53,7 +53,7 @@ If you get an error saying it can't listen because the port is busy, try startin
 
 Also, for some reason the browser might not launch automatically. Just type `localhost:XXXX` in the browser address bar, where XXXX is the port number, and you should be good to go. Also, when you type `jptnode ...`, it seems to actually log you into that node in the Terminal. Not sure why. Just minimize the window and ignore.
 
-Another thing to be aware of. The `deseq2` conda environment does not include the DESeq2 conda distribution. It has a lot of package conflicts. Instead, from within the `deseq2` environment, launch R and download DESeq2 using `biocmanager`. This only has to be done once. It will take a while and is quite verbose. Also download the R packages `apeglm`,`pheatmap`, and `VennDiagram` which are either dependencies of DESeq2 or will be useful for plotting, etc. If it asks you to update packages, JUST SAY NO! The environment is already set up as we want it; no need to go muck it up.
+Another thing to be aware of. The `deseq2` conda environment does not include the DESeq2 conda distribution. It has a lot of package conflicts. Instead, from within the `deseq2` environment, launch R and download DESeq2 using `biocmanager`. This only has to be done once. It will take a while and is quite verbose. Also download the R packages `apeglm`,`pheatmap`, and `VennDiagram`, which are either dependencies of DESeq2 or will be useful for plotting, etc. If it asks you to update packages, JUST SAY NO! The environment is already set up as we want it; no need to go muck it up.
 
 ```
 R
