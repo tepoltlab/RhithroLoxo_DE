@@ -40,6 +40,6 @@ EnTAP --runN -i /vortexfs1/scratch/ztobias/RhithroLoxo_DE/txms/rhithro/rhithro_t
     -c stramenopiles \
     -c rhizocephala \
     -c entoniscidae \
-    --taxon crustacea
+    --taxon brachyura
 
 date
