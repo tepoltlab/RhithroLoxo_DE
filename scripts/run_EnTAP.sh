@@ -24,7 +24,7 @@ EnTAP --runN -i /vortexfs1/scratch/ztobias/RhithroLoxo_DE/txms/rhithro/rhithro_t
     -d entap_outfiles/bin/refseq_complete.dmnd \
     -d entap_outfiles/bin/uniprot_sprot.dmnd \
     -d entap_outfiles/bin/uniprot_trembl.dmnd \
-    -d entap_outfiles/bin/uniref90.dmnd \
+    -d entap_outfiles/bin/uniref90_rf.dmnd \
     -t 35 \
     -c bacteria \
     -c archaea \

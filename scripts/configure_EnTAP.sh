@@ -21,7 +21,7 @@ EnTAP --config -d /vortexfs1/scratch/ztobias/RhithroLoxo_DE/db/nr.gz \
     -d /vortexfs1/scratch/ztobias/RhithroLoxo_DE/db/uniprot_trembl.fasta.gz \
     -d /vortexfs1/scratch/ztobias/RhithroLoxo_DE/db/refseq_complete.faa.gz \
     -d /vortexfs1/scratch/ztobias/RhithroLoxo_DE/db/uniprot_sprot.fasta.gz \
-    -d /vortexfs1/scratch/ztobias/RhithroLoxo_DE/db/uniref90.fasta.gz \
+    -d /vortexfs1/scratch/ztobias/RhithroLoxo_DE/db/uniref90_rf.fasta.gz \
     -t 35
 
 date
