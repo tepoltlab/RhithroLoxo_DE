@@ -19,7 +19,7 @@ module load anaconda
 source ~/.bash_profile
 source activate EnTAP
 
-EnTAP --runN -i /vortexfs1/scratch/ztobias/RhithroLoxo_DE/txms/rhithro/rhithro_txm_long.fasta \
+EnTAP --runN -i /vortexfs1/scratch/ztobias/RhithroLoxo_DE/txms/rhithro/rhithro_txm_long_clean.fasta \
     -d entap_outfiles/bin/nr.dmnd \
     -d entap_outfiles/bin/refseq_complete.dmnd \
     -d entap_outfiles/bin/uniprot_sprot.dmnd \

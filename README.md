@@ -16,9 +16,9 @@ This analysis was performed with ease of reproducibility in mind, both for my ow
 
 
 
-### How to run DESeq2 analysis in a jupyter notebook on interactive node
+### How to analyses in R within a jupyter notebook on interactive node
 
-Running the DESeq2 differential expression analysis interactively is great for fine-tuning code and exploring the data. As such, I chose to perform this analysis from within a jupyter notebook instead of writing a .R script to be executed within the Snakemake pipeline. This notebook is called `DESeq2_RhithroLoxo.ipynb` and can be found in the `jupyter_notebooks/` directory within this repo. To harness the computational power of Poseidon (more RAM, multithreading, etc.), I launched a jupyter notebook from within an interactive session on a compute node, instead of from one of the two login nodes. Big thanks to Harriet Alexander for providing the instructions on her blog! <https://alexanderlabwhoi.github.io/post/2019-03-08_jpn_slurm/> 
+Running the downstream differential expression and associated analyses interactively is great for fine-tuning code and exploring the data. As such, I chose to perform this analysis from within jupyter notebooks instead of writing a .R script to be executed within the Snakemake pipeline. DESeq2 is performed in a notebook  called `DESeq2_RhithroLoxo.ipynb`, WGCNA analysis in `WGCNA.ipynb`, and `GO_MWU` in `WGCNA.ipynb`. They all can be found in the `jupyter_notebooks/` directory within this repo. To harness the computational power of Poseidon (more RAM, multithreading, etc.), I launched the jupyter notebooks from within an interactive session on a compute node, instead of from one of the two login nodes. All of the notebooks operate within the `deseq2` conda environment in the `envs/` directory. Big thanks to Harriet Alexander for providing the instructions on her [blog](https://alexanderlabwhoi.github.io/post/2019-03-08_jpn_slurm/) for running jupyter notebook from within interactive SLURM sessions!
 
 From within the main directory, lauch an interactive session on a compute node and activate the `deseq2` environment. (If you haven't already, use the `deseq2.yaml` file provided in `envs/` directory for creating the deseq2 conda environment within your home directory on the cluster, i.e.`conda env create -f envs/deseq2.yaml`.)
 
@@ -52,7 +52,7 @@ If you get an error saying it can't listen because the port is busy, try startin
 
 Then go to your preferred web browser and type `localhost:8888` in the search bar (or whatever port number was assigned above). If you have configured your password, it will ask you for it. If not, you will have to set it on Poseidon by typing `jupyter notebook password`.
 
-Another thing to be aware of. The `deseq2` conda environment does not include the DESeq2 conda distribution. It has a lot of package conflicts. Instead, from within the `deseq2` environment, launch R and download DESeq2 using `biocmanager`. This only has to be done once. It will take a while and is quite verbose. Also download the R packages `apeglm`, `ashr`,`pheatmap`, and `VennDiagram`, which are either dependencies of DESeq2 or will be useful for plotting, etc. If it asks you to update packages, JUST SAY NO! The environment is already set up as we want it; no need to go muck it up.
+Another thing to be aware of. The `deseq2` conda environment does not include the `DESeq2` conda distribution. It has a lot of package conflicts. Instead, from within the `deseq2` environment, launch R and download `DESeq2`, `WGCNA`, and `GO_MWU` using `biocmanager` or `install.packages()` from base R. This only has to be done once. It will take a while and is quite verbose. Also download the R packages `apeglm`, `ashr`,`pheatmap`, and `VennDiagram`, which are either dependencies of DESeq2 or will be useful for plotting, etc. If it asks you to update packages, JUST SAY NO! The environment is already set up as we want it; no need to go muck it up.
 
 ```
 R
@@ -64,6 +64,7 @@ BiocManager::install("apeglm")
 install.packages("pheatmap")
 install.packages("VennDiagram")
 install.packages("ashr")
+BiocManager::install("WGCNA")
 ```
 
 Okay now you're all set to actually run the DESeq2 analysis from the jupyter notebook! 
