@@ -4,7 +4,7 @@
 
 This GitHub repository contains all necessary scripts and metadata for the execution of a differential expression analysis pipeline of an RNA-seq dataset from experimental infections of various populations of the mud crab _Rhithropanopeus harrisi_ with differing degrees of historical exposure to the parasitic barnacle _Loxothylacus panopaei_. This repository serves as a supplement to my first-year research report entilted "TITLE HERE!". 
 
-The analysis starts from previously demultiplexed, trimmed, and cleaned 50bp, single-end sequence reads from an Illumina HiSeq 2000. It also utilizes a previously generated transcriptome for the parasite. These files can be made available upon request. Aside from these two exceptions, all steps of the pipeline are included herein and should be readily repeatable by readers familiar with basic programming in bash, R, and python. Most commands up through the generation of the differential expression matrix are executed using the workflow engine 'Snakemake', relying on packages installed in conda environments and a few borrowed or custom scripts. The major exception to this are those commands with the functional annotation package EnTAP v0.9.0-beta, which lacks a conda distribution and must be installed manually. Instructions for installation are included below in the section below entitled "EnTAP Setup"; additional instructions can be found at <https://entap.readthedocs.io/en/latest/introduction.html>. 
+The analysis starts from previously demultiplexed, trimmed, and cleaned 50bp, single-end sequence reads from an Illumina HiSeq 2000. It also utilizes a previously generated transcriptome for the parasite. These files can be made available upon request. Aside from these two exceptions, all steps of the pipeline are included herein and should be readily repeatable by readers familiar with basic programming in bash, R, and python. Most commands up through the generation of the differential expression matrix are executed using the workflow engine 'Snakemake', relying on packages installed in conda environments and a few borrowed or custom scripts. The major exception to this are those commands with the functional annotation package EnTAP v0.9.0-beta, which lacks a conda distribution and must be installed manually. Instructions for installation are included below in the section below entitled "EnTAP Setup"; additional instructions can be found [here](https://entap.readthedocs.io/en/latest/introduction.html). 
 
 All steps in the pipeline were carried out on Poseidon, the high performance cluster (HPC) at Woods Hole Oceanographic Institution. 
 
@@ -18,7 +18,7 @@ This analysis was performed with ease of reproducibility in mind, both for my ow
 
 ### How to analyses in R within a jupyter notebook on interactive node
 
-Running the downstream differential expression and associated analyses interactively is great for fine-tuning code and exploring the data. As such, I chose to perform this analysis from within jupyter notebooks instead of writing a .R script to be executed within the Snakemake pipeline. DESeq2 is performed in a notebook  called `DESeq2_RhithroLoxo.ipynb`, WGCNA analysis in `WGCNA.ipynb`, and `GO_MWU` in `WGCNA.ipynb`. They all can be found in the `jupyter_notebooks/` directory within this repo. To harness the computational power of Poseidon (more RAM, multithreading, etc.), I launched the jupyter notebooks from within an interactive session on a compute node, instead of from one of the two login nodes. All of the notebooks operate within the `deseq2` conda environment in the `envs/` directory. Big thanks to Harriet Alexander for providing the instructions on her [blog](https://alexanderlabwhoi.github.io/post/2019-03-08_jpn_slurm/) for running jupyter notebook from within interactive SLURM sessions!
+Running the downstream differential expression and associated analyses interactively is great for fine-tuning code and exploring the data. As such, I chose to perform this analysis from within jupyter notebooks instead of writing .R scripts to be executed within the Snakemake pipeline. DESeq2 is performed in a notebook  called `DESeq2_RhithroLoxo.ipynb`, WGCNA analysis in `WGCNA.ipynb`, and `GO_MWU` in `GO_MWU.ipynb`. They all can be found in the `jupyter_notebooks/` directory within this repo. To harness the computational power of Poseidon (more RAM, multithreading, etc.), I launched the jupyter notebooks from within an interactive session on a compute node, instead of from one of the two login nodes. All of the notebooks operate within the `deseq2` conda environment in the `envs/` directory. Big thanks to Harriet Alexander for providing the instructions for this on her [blog](https://alexanderlabwhoi.github.io/post/2019-03-08_jpn_slurm/).
 
 From within the main directory, lauch an interactive session on a compute node and activate the `deseq2` environment. (If you haven't already, use the `deseq2.yaml` file provided in `envs/` directory for creating the deseq2 conda environment within your home directory on the cluster, i.e.`conda env create -f envs/deseq2.yaml`.)
 
@@ -26,7 +26,7 @@ From within the main directory, lauch an interactive session on a compute node a
 srun -p compute --time=04:00:00 --ntasks-per-node 8 --mem 40gb --pty bash
 conda activate deseq2
 export XDG_RUNTIME_DIR=""
-jupyter notebook --no-browser --8888
+jupyter notebook --no-browser --port 8888
 ```
 
 This will lauch a jupyter notebook at a port listed at `http://localhost:8888/`. It will use a different port number if that one is already in use. Remember this number! You also need to take note of the name of the node you are running on. It should be in your prompt, i.e. if your prompt looks like this: `(deseq2) [ztobias@pn039 RhithroLoxo_DE]$`, then the node is pn039.
@@ -79,7 +79,7 @@ srun -p scavenger --time=04:00:00 --ntasks-per-node=36 --mem=100gb --pty bash
 conda activate EnTAP
 ```
 
-Install EnTAP and compile according to instructions 
+Install EnTAP and compile according to [instructions](https://entap.readthedocs.io/en/latest/installation.html). 
 
 ```
 git clone https://gitlab.com/enTAP/EnTAP.git

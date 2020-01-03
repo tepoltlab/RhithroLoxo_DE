@@ -37,6 +37,7 @@ QUANT_MAT = expand('outputs/quant/salmon.isoform.{wc1}', wc1 = ['counts.matrix',
 DOWNLOAD_DB_OUT = expand('db/{wc1}', wc1=['uniref90.fasta.gz','uniprot_trembl.fasta.gz','nr.gz','Pfam-A.hmm.h3f','uniprot_sprot.fasta.gz','refseq_complete.faa.gz'])
 TRINOTATE_SQL = ['db/Trinotate.sqlite','db/uniprot_sprot.dat.gz','db/uniprot_sprot.pep']
 DIAMOND_DB = expand('db/{wc1}.dmnd', wc1 = ['trembl','sprot'])
+UNIREF_REFORMAT = 'db/uniref90_rf.fasta.gz'
 DIAMONDP_ANNOT_OUT = expand('outputs/trinotate/diamondp.{wc1}.tsv', wc1=['trembl','sprot'])
 DIAMONDX_ANNOT_OUT = expand('outputs/trinotate/diamondx.{wc1}.tsv', wc1=['trembl','sprot'])
 DIAMONDX_XML = 'outputs/trinotate/diamondx.nr.xml'
@@ -56,7 +57,7 @@ TRINOTATE_STATS = 'outputs/trinotate/trinotate_stats.txt'
 ## GET SNAKEMAKEY
 
 rule all:
-    input: FASTQC_ZIP, FASTQC_HTML, LOXO_DB, LOXO_BLAST_RESULTS, CONTAM_LIST, CONTAM_RATES, CLEANED_READS, RHITHRO_CLEAN_CAT, RHITHRO_TXMS, RHITHRO_TXM_GENETRANSMAPS, PRELIM_TXM_IDXS, QUANT_CAT, EXN50, N50, TXM_LONG, DIRTY_CHUNKS, BLAST_CONTAM, BLAST_CONTAM_MERGED, BLAST_CONTAM_LIST, TXM_LONG_CLEAN, TRANSDECODER_OUT, RHITHRO_TXM_IDX, QUANT_OUT, QUANT_MAT, DOWNLOAD_DB_OUT, DIAMOND_DB, DIAMONDP_ANNOT_OUT, DIAMONDX_ANNOT_OUT, DIAMONDX_XML, HMMSCAN_OUT, GENE_TRANS_MAP, TRINOTATE_INIT, TRINOTATE_LOAD, TRINOTATE_ANNOT, TRINOTATE_STATS,
+    input: FASTQC_ZIP, FASTQC_HTML, LOXO_DB, LOXO_BLAST_RESULTS, CONTAM_LIST, CONTAM_RATES, CLEANED_READS, RHITHRO_CLEAN_CAT, RHITHRO_TXMS, RHITHRO_TXM_GENETRANSMAPS, PRELIM_TXM_IDXS, QUANT_CAT, EXN50, N50, TXM_LONG, DIRTY_CHUNKS, BLAST_CONTAM, BLAST_CONTAM_MERGED, BLAST_CONTAM_LIST, TXM_LONG_CLEAN, TRANSDECODER_OUT, RHITHRO_TXM_IDX, QUANT_OUT, QUANT_MAT, DOWNLOAD_DB_OUT, DIAMOND_DB, UNIREF_REFORMAT, DIAMONDP_ANNOT_OUT, DIAMONDX_ANNOT_OUT, DIAMONDX_XML, HMMSCAN_OUT, GENE_TRANS_MAP, TRINOTATE_INIT, TRINOTATE_LOAD, TRINOTATE_ANNOT, TRINOTATE_STATS,
     
 #DIAMOND_ANNOT_OUT_SPLIT
 #CLEAN_CHUNKS_NT
@@ -532,7 +533,25 @@ rule download_db:
         rm complete.nonredundant_protein.*.protein.faa.gz
         """
 
-#prepare diamond databases
+rule reformat_uniref90:
+    input:
+        db = 'db/uniref90.fasta.gz',
+        script = 'scripts/reformat_uniref.py'
+    output:
+        UNIREF_REFORMAT
+    params:
+        dir = directory('db/')
+    shell:
+        """
+        cd {params.dir}
+        gunzip -c ../{input.db} > uniref90.fasta
+        python ../{input.script} uniref90.fasta uniref90_rf.fasta
+        gzip uniref90_rf.fasta
+        rm uniref90.fasta
+        """
+
+
+#prepare diamond databases for trinotate
 
 rule diamond_db: 
     input:
@@ -626,7 +645,7 @@ rule diamondx_xml: #for blast2go
 rule hmmscan:
     input:
         aa = 'outputs/transdecoder/rhithro_txm_long_clean.fasta.transdecoder.pep',
-        pfam = DOWNLOAD_DB_OUT #for tracking. #Trinotate.sqlite removed from list b/c of later rules. assume download works
+        db = 'db/Pfam-A.hmm.h3f'
     output:
         hits = HMMSCAN_OUT
     conda:

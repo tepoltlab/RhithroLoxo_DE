@@ -91,6 +91,12 @@ build_trinotate_sql:
     threads: 1
     mem: 40
     time: 120
+    
+reformat_uniref:
+    queue: compute
+    threads: 1
+    mem: 80
+    time: 240
 
 diamondx_annot:
     queue: scavenger
