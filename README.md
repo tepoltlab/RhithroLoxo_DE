@@ -23,7 +23,7 @@ Running the downstream differential expression and associated analyses interacti
 From within the main directory, lauch an interactive session on a compute node and activate the `deseq2` environment. (If you haven't already, use the `deseq2.yaml` file provided in `envs/` directory for creating the deseq2 conda environment within your home directory on the cluster, i.e.`conda env create -f envs/deseq2.yaml`.)
 
 ```
-srun -p compute --time=04:00:00 --ntasks-per-node 8 --mem 40gb --pty bash
+srun -p compute --time=04:00:00 --ntasks-per-node 12 --mem 180gb --pty bash
 conda activate deseq2
 export XDG_RUNTIME_DIR=""
 jupyter notebook --no-browser --port 8888
