@@ -52,7 +52,7 @@ If you get an error saying it can't listen because the port is busy, try startin
 
 Then go to your preferred web browser and type `localhost:8888` in the search bar (or whatever port number was assigned above). If you have configured your password, it will ask you for it. If not, you will have to set it on Poseidon by typing `jupyter notebook password`.
 
-Another thing to be aware of. The `deseq2` conda environment does not include the `DESeq2` conda distribution. It has a lot of package conflicts. Instead, from within the `deseq2` environment, launch R and download `DESeq2`, `WGCNA`, and `GO_MWU` using `biocmanager` or `install.packages()` from base R. This only has to be done once. It will take a while and is quite verbose. Also download the R packages `apeglm`, `ashr`,`pheatmap`, and `VennDiagram`, which are either dependencies of DESeq2 or will be useful for plotting, etc. If it asks you to update packages, JUST SAY NO! The environment is already set up as we want it; no need to go muck it up.
+Another thing to be aware of. The `deseq2` conda environment does not include the `DESeq2` conda distribution. It has a lot of package conflicts. Instead, from within the `deseq2` environment, launch R and download `DESeq2`, `WGCNA`, and `GO_MWU` using `biocmanager` or `install.packages()` from base R. This only has to be done once. It will take a while and is quite verbose. Also download a host of other R packages, which are either dependencies of one of the three main analysis packages or will be useful for plotting, etc. If it asks you to update packages, JUST SAY NO! The environment is already set up as we want it; no need to go muck it up.
 
 ```
 R
@@ -65,6 +65,9 @@ install.packages("pheatmap")
 install.packages("VennDiagram")
 install.packages("ashr")
 BiocManager::install("WGCNA")
+install.packages("gdata")
+install.packages("UpSetR")
+install.packages("flashClust")
 ```
 
 Okay now you're all set to actually run the DESeq2 analysis from the jupyter notebook! 
@@ -72,10 +75,9 @@ Okay now you're all set to actually run the DESeq2 analysis from the jupyter not
 
 ### EnTAP setup
 
-Start interactive session in RhithroLoxo_DE directory 
+Navigate to the main repository directory and activate the `EnTAP` conda environment (previously loaded from `EnTAP.yaml` file in `envs/`). This environment contains all dependencies for installing/compiling. 
 
 ```
-srun -p scavenger --time=04:00:00 --ntasks-per-node=36 --mem=100gb --pty bash
 conda activate EnTAP
 ```
 
