@@ -20,6 +20,8 @@ This analysis was performed with ease of reproducibility in mind, both for my ow
 
 Running the downstream differential expression and associated analyses interactively is great for fine-tuning code and exploring the data. As such, I chose to perform this analysis from within jupyter notebooks instead of writing .R scripts to be executed within the Snakemake pipeline. DESeq2 is performed in a notebook  called `DESeq2_RhithroLoxo.ipynb`, WGCNA analysis in `WGCNA.ipynb`, and `GO_MWU` in `GO_MWU.ipynb`. They all can be found in the `jupyter_notebooks/` directory within this repo. To harness the computational power of Poseidon (more RAM, multithreading, etc.), I launched the jupyter notebooks from within an interactive session on a compute node, instead of from one of the two login nodes. All of the notebooks operate within the `deseq2` conda environment in the `envs/` directory. Big thanks to Harriet Alexander for providing the instructions for this on her [blog](https://alexanderlabwhoi.github.io/post/2019-03-08_jpn_slurm/).
 
+#### `DESeq2` and `WCGNA`
+
 From within the main directory, lauch an interactive session on a compute node and activate the `deseq2` environment. (If you haven't already, use the `deseq2.yaml` file provided in `envs/` directory for creating the deseq2 conda environment within your home directory on the cluster, i.e.`conda env create -f envs/deseq2.yaml`.)
 
 ```
@@ -52,7 +54,7 @@ If you get an error saying it can't listen because the port is busy, try startin
 
 Then go to your preferred web browser and type `localhost:8888` in the search bar (or whatever port number was assigned above). If you have configured your password, it will ask you for it. If not, you will have to set it on Poseidon by typing `jupyter notebook password`.
 
-Another thing to be aware of. The `deseq2` conda environment does not include the `DESeq2` conda distribution. It has a lot of package conflicts. Instead, from within the `deseq2` environment, launch R and download `DESeq2`, `WGCNA`, and `GO_MWU` using `biocmanager` or `install.packages()` from base R. This only has to be done once. It will take a while and is quite verbose. Also download a host of other R packages, which are either dependencies of one of the three main analysis packages or will be useful for plotting, etc. If it asks you to update packages, JUST SAY NO! The environment is already set up as we want it; no need to go muck it up.
+Another thing to be aware of. The `deseq2` conda environment does not include the `DESeq2` conda distribution. It has a lot of package conflicts. Instead, from within the `deseq2` environment, launch R and download `DESeq2` and `WGCNA` using `biocmanager` or `install.packages()` from base R. This only has to be done once. It will take a while and is quite verbose. Also download a host of other R packages, which are either dependencies of one of the three main analysis packages or will be useful for plotting, etc. If it asks you to update packages, JUST SAY NO! The environment is already set up as we want it; no need to go muck it up.
 
 ```
 R
@@ -70,7 +72,26 @@ install.packages("UpSetR")
 install.packages("flashClust")
 ```
 
-Okay now you're all set to actually run the DESeq2 analysis from the jupyter notebook! 
+Okay now you're all set to actually run the DESeq2 and WGCNA analyses from the jupyter notebook! 
+
+#### `GO_MWU`
+
+`GO_MWU` is not available in a CRAN or BioConductor install. Instead you just pull the scripts directly from the GitHub [repository](https://github.com/z0on/GO_MWU). 
+
+In the main folder, clone the repository. 
+
+````
+git clone https://github.com/z0on/GO_MWU.git
+````
+
+This will have a bunch of other files, but all you need are: `GO_MWU.R`, `gomwu_a.pl`, `gomwu_b.pl`, and `gomwu.functions.R`. Feel free to remove others or use them as examples. You should replace the `go.obo` with the most recent release. (Note that the link in the GO_MWU README.md is no longer functional. Use link in code block below.)
+
+```
+rm go.obo
+wget http://current.geneontology.org/ontology/go.obo
+```
+
+Then add all the necessary files and edit the scripts as [instructed](https://github.com/z0on/GO_MWU/blob/master/README.md), then run!
  
 
 ### EnTAP setup
@@ -121,4 +142,4 @@ Then run the run_EnTAP.sh script
 sbatch run_EnTAP.sh
 ```
 
-This creates a myriad of output files in the `EnTAP/entap_outfiles` directory. The results are parsed in an accompanying jupyter notebook entitled `parse_annot.ipynb`.
+This creates a myriad of output files in the `EnTAP/entap_outfiles` directory. The eggNOG mapping results are reformatted for input into `GO_MWU` using the script `EnTAP2GO.py` in the `scripts/` folder.
