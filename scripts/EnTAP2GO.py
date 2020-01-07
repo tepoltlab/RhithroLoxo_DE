@@ -6,9 +6,9 @@
 import sys
 import re
 
-Usage = "EnTAP2GO.py path_to_final_annotations_lvl0.tsv path_to_output evalue_threshold[num] filter_contamination?[y/n]"
+Usage = "EnTAP2GO.py path_to_final_annotations_lvl0.tsv path_to_output evalue_threshold[num] filter_contamination?[y/n] eggNOG_taxonomic_scope[opt]"
 
-if (len(sys.argv) < 5) or (len(sys.argv) > 5):
+if (len(sys.argv) < 5):
 	print("See usage:")
 	print(Usage)
 	exit()
@@ -17,6 +17,7 @@ else:
     outfile = sys.argv[2]
     eval_cutoff = float(sys.argv[3])
     exclude_contam = sys.argv[4]
+    eggDB = sys.argv[5]
 
 print("Excluding matches above eval of " + str(eval_cutoff))
 
@@ -28,6 +29,12 @@ else:
     print("filter_contamination argument must be 'y' or 'n', case sensitive")
     exit()
     
+if eggDB == None:
+    print("No eggNOG taxonomic scope selected. Retrieving hits from any matching COG")
+else:
+    print("Restricting GO term retrieval to matches against " + eggDB + " COGs")
+
+
 with open(infile, "r") as f_in:
     with open(outfile,"w") as f_out:
         next(f_in)
@@ -37,6 +44,8 @@ with open(infile, "r") as f_in:
                 continue #skip line
             elif exclude_contam == "y" and cols[16] == "Yes": #if contaminant exclusion specified and transcript is a contaminant
                 continue #skip line
+            elif cols[28] != eggDB: #if COG isn't of taxonomic scope specified
+                continue
             else:
                 ID = cols[0] #get first as ID
                 GO = "" #initialize empty string
