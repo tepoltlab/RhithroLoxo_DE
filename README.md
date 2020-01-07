@@ -12,15 +12,16 @@ All steps in the pipeline were carried out on Poseidon, the high performance clu
 
 This analysis was performed with ease of reproducibility in mind, both for my own sake in organizing the steps of the pipeline and for those interested in understanding the nuts and bolts or even replicating the results independently. That being said, there are some steps that may be influences by idiosyncracies of the configuration of the Poseidon HPC, specific versions of software, or release dates of reference sequence databases. 
 
-### How to execute Snakemake pipeline
+### Overview of steps
+
+
+### Executing the `Snakemake` pipeline
 
 
 
-### How to analyses in R within a jupyter notebook on interactive node
+### Running `DESeq2` and `WCGNA`  from within a jupyter notebook on HPC compute node
 
-Running the downstream differential expression and associated analyses interactively is great for fine-tuning code and exploring the data. As such, I chose to perform this analysis from within jupyter notebooks instead of writing .R scripts to be executed within the Snakemake pipeline. DESeq2 is performed in a notebook  called `DESeq2_RhithroLoxo.ipynb`, WGCNA analysis in `WGCNA.ipynb`, and `GO_MWU` in `GO_MWU.ipynb`. They all can be found in the `jupyter_notebooks/` directory within this repo. To harness the computational power of Poseidon (more RAM, multithreading, etc.), I launched the jupyter notebooks from within an interactive session on a compute node, instead of from one of the two login nodes. All of the notebooks operate within the `deseq2` conda environment in the `envs/` directory. Big thanks to Harriet Alexander for providing the instructions for this on her [blog](https://alexanderlabwhoi.github.io/post/2019-03-08_jpn_slurm/).
-
-#### `DESeq2` and `WCGNA`
+Running the downstream differential expression and associated analyses interactively is great for fine-tuning code and exploring the data. As such, I chose to perform this analysis from within jupyter notebooks instead of writing .R scripts to be executed within the Snakemake pipeline. DESeq2 is performed in a notebook  called `DESeq2_RhithroLoxo.ipynb` and WGCNA in `WGCNA.ipynb`. These can be found in the `jupyter_notebooks/` directory within this repo. To harness the computational power of Poseidon (more RAM, multithreading, etc.), I launched the jupyter notebooks from within an interactive session on a compute node, instead of from one of the two login nodes. All of the notebooks operate within the `deseq2` conda environment in the `envs/` directory. Big thanks to Harriet Alexander for providing the instructions for this on her [blog](https://alexanderlabwhoi.github.io/post/2019-03-08_jpn_slurm/).
 
 From within the main directory, lauch an interactive session on a compute node and activate the `deseq2` environment. (If you haven't already, use the `deseq2.yaml` file provided in `envs/` directory for creating the deseq2 conda environment within your home directory on the cluster, i.e.`conda env create -f envs/deseq2.yaml`.)
 
@@ -74,7 +75,7 @@ install.packages("flashClust")
 
 Okay now you're all set to actually run the DESeq2 and WGCNA analyses from the jupyter notebook! 
 
-#### `GO_MWU`
+### Running `GO_MWU`
 
 `GO_MWU` is not available in a CRAN or BioConductor install. Instead you just pull the scripts directly from the GitHub [repository](https://github.com/z0on/GO_MWU). 
 
@@ -91,10 +92,15 @@ rm go.obo
 wget http://current.geneontology.org/ontology/go.obo
 ```
 
-Then add all the necessary files and edit the scripts as [instructed](https://github.com/z0on/GO_MWU/blob/master/README.md), then run!
- 
+Then add all the necessary files, edit the `GO_MWU.R` script as [instructed](https://github.com/z0on/GO_MWU/blob/master/README.md), then run!
 
-### EnTAP setup
+```
+
+```
+
+Outputs are saved to...
+
+### `EnTAP` setup
 
 Navigate to the main repository directory and activate the `EnTAP` conda environment (previously loaded from `EnTAP.yaml` file in `envs/`). This environment contains all dependencies for installing/compiling. 
 
@@ -118,14 +124,14 @@ cmake CMakeLists.txt
 make
 ```
 
-Edit bash profile and source. Add $SCRATCH/RhithroLoxo_DE/EnTAP to path
+Edit bash profile and source. Add `$SCRATCH/RhithroLoxo_DE/EnTAP` to path
 
 ```
 source ~/.bash_profile
 conda activate EnTAP
 ```
 
-Copy the configure_EnTAP.sh and run_EnTAP.sh scripts from scripts/ to EnTAP/. Then replace the existing `entap_config.txt` file with the one provided in `metadata/`. Then run configure_EnTAP.sh
+Copy the `configure_EnTAP.sh` and `run_EnTAP.sh` scripts from `scripts/` to `EnTAP/`. Then replace the existing `entap_config.txt` file with the one provided in `metadata/`. Then run `configure_EnTAP.sh`
 
 ```
 cp ../scripts/*EnTAP.sh ./
@@ -139,7 +145,13 @@ Check out the log files and output to make sure the databases were downloaded an
 Then run the run_EnTAP.sh script
 
 ```
-sbatch run_EnTAP.sh
+sbatch `run_EnTAP.sh`
 ```
 
 This creates a myriad of output files in the `EnTAP/entap_outfiles` directory. The eggNOG mapping results are reformatted for input into `GO_MWU` using the script `EnTAP2GO.py` in the `scripts/` folder.
+
+RUNNING THE ENTAP2GO.PY SCRIPT HERE!
+
+```
+
+```
