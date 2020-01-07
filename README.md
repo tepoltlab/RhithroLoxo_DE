@@ -21,7 +21,7 @@ This analysis was performed with ease of reproducibility in mind, both for my ow
 
 ### Running `DESeq2` and `WCGNA`  from within a jupyter notebook on HPC compute node
 
-Running the downstream differential expression and associated analyses interactively is great for fine-tuning code and exploring the data. As such, I chose to perform this analysis from within jupyter notebooks instead of writing .R scripts to be executed within the Snakemake pipeline. DESeq2 is performed in a notebook  called `DESeq2_RhithroLoxo.ipynb` and WGCNA in `WGCNA.ipynb`. These can be found in the `jupyter_notebooks/` directory within this repo. To harness the computational power of Poseidon (more RAM, multithreading, etc.), I launched the jupyter notebooks from within an interactive session on a compute node, instead of from one of the two login nodes. All of the notebooks operate within the `deseq2` conda environment in the `envs/` directory. Big thanks to Harriet Alexander for providing the instructions for this on her [blog](https://alexanderlabwhoi.github.io/post/2019-03-08_jpn_slurm/).
+Running the downstream differential expression and associated analyses interactively is great for fine-tuning code and exploring the data. As such, I chose to perform this analysis from within jupyter notebooks instead of writing .R scripts to be executed within the Snakemake pipeline. DESeq2 is performed in a notebook  called `DESeq2_RhithroLoxo.ipynb` and WGCNA in two notebooks, one for contrasting module expression with infection status and sex, `WGCNA_FP.ipynb`, and another for contrasting module expression with infection status and range, `WGCNA_noFP.ipynb` . These can be found in the `jupyter_notebooks/` directory within this repo. To harness the computational power of Poseidon (more RAM, parallelization, etc.), I launched the jupyter notebooks from within an interactive session on a compute node, instead of from one of the two login nodes. All of the notebooks operate within the `deseq2` conda environment in the `envs/` directory. Big thanks to Harriet Alexander for providing the instructions for this on her [blog](https://alexanderlabwhoi.github.io/post/2019-03-08_jpn_slurm/)!
 
 From within the main directory, lauch an interactive session on a compute node and activate the `deseq2` environment. (If you haven't already, use the `deseq2.yaml` file provided in `envs/` directory for creating the deseq2 conda environment within your home directory on the cluster, i.e.`conda env create -f envs/deseq2.yaml`.)
 
@@ -92,13 +92,7 @@ rm go.obo
 wget http://current.geneontology.org/ontology/go.obo
 ```
 
-Then add all the necessary files, edit the `GO_MWU.R` script as [instructed](https://github.com/z0on/GO_MWU/blob/master/README.md), then run!
-
-```
-
-```
-
-Outputs are saved to...
+Then add all the necessary files, copy code blocks from the `GO_MWU.R` script into a notebook entitled `GO_MWU.ipynb` in that same folder (not the main `juptyer_notebooks/` directory), edit as [instructed](https://github.com/z0on/GO_MWU/blob/master/README.md), and run! Note that this notebook has to be launched from within the `deseq2` conda environment, or you'll lack the R kernel and won't be able to run it. 
 
 ### `EnTAP` setup
 
