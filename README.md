@@ -71,6 +71,7 @@ BiocManager::install("WGCNA")
 install.packages("gdata")
 install.packages("UpSetR")
 install.packages("flashClust")
+install.packages("ape")
 ```
 
 Okay now you're all set to actually run the DESeq2 and WGCNA analyses from the jupyter notebook! 
@@ -92,7 +93,7 @@ rm go.obo
 wget http://current.geneontology.org/ontology/go.obo
 ```
 
-Then add all the necessary files, copy code blocks from the `GO_MWU.R` script into a notebook entitled `GO_MWU.ipynb` in that same folder (not the main `juptyer_notebooks/` directory), edit as [instructed](https://github.com/z0on/GO_MWU/blob/master/README.md), and run! Note that this notebook has to be launched from within the `deseq2` conda environment, or you'll lack the R kernel and won't be able to run it. 
+Then add all the necessary files, copy code blocks from the `GO_MWU.R` script into a notebook entitled `GO_MWU.ipynb` in that same folder (not the main `juptyer_notebooks/` directory), edit as [instructed](https://github.com/z0on/GO_MWU/blob/master/README.md), and run! Note that this notebook has to be launched from within the `deseq2` conda environment, or you'll lack the R kernel and won't be able to run it.
 
 ### `EnTAP` setup
 
