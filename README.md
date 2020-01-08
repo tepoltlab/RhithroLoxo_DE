@@ -55,7 +55,7 @@ If you get an error saying it can't listen because the port is busy, try startin
 
 Then go to your preferred web browser and type `localhost:8888` in the search bar (or whatever port number was assigned above). If you have configured your password, it will ask you for it. If not, you will have to set it on Poseidon by typing `jupyter notebook password`.
 
-Another thing to be aware of. The `deseq2` conda environment does not include the `DESeq2` conda distribution. It has a lot of package conflicts. Instead, from within the `deseq2` environment, launch R and download `DESeq2` and `WGCNA` using `biocmanager` or `install.packages()` from base R. This only has to be done once. It will take a while and is quite verbose. Also download a host of other R packages, which are either dependencies of one of the three main analysis packages or will be useful for plotting, etc. If it asks you to update packages, JUST SAY NO! The environment is already set up as we want it; no need to go muck it up.
+Another thing to be aware of. The `deseq2` conda environment does not include the `DESeq2` conda distribution. It has a lot of package conflicts. Instead, from within the `deseq2` environment, launch R and download `DESeq2` and `WGCNA` using `biocmanager` or `install.packages()` from base R. This only has to be done once. It will take a while and is quite verbose. Also download a host of other R packages, which are either dependencies of one of the three main analysis packages or will be useful for plotting, etc. They probably could be installed from inside jupyter, but I feel like this is safer. If it asks you to update packages, JUST SAY NO! The environment is already set up as we want it; no need to go muck it up.
 
 ```
 R
@@ -72,6 +72,7 @@ install.packages("gdata")
 install.packages("UpSetR")
 install.packages("flashClust")
 install.packages("ape")
+install.package("cowplot")
 ```
 
 Okay now you're all set to actually run the DESeq2 and WGCNA analyses from the jupyter notebook! 

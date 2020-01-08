@@ -30,7 +30,7 @@ else:
     exit()
     
 if eggDB == None:
-    print("No eggNOG taxonomic scope selected. Retrieving hits from any matching COG")
+    print("No eggNOG taxonomic scope selected. Retrieving hits from any matching COGs")
 else:
     print("Restricting GO term retrieval to matches against " + eggDB + " COGs")
 
