@@ -10,7 +10,11 @@ All steps in the pipeline were carried out on Poseidon, the high performance clu
 
 ### Reproducibility statement
 
-This analysis was performed with ease of reproducibility in mind, both for my own sake in organizing the steps of the pipeline and for those interested in understanding the nuts and bolts or even replicating the results independently. That being said, there are some steps that may be influences by idiosyncracies of the configuration of the Poseidon HPC, specific versions of software, or release dates of reference sequence databases. 
+This analysis was performed with ease of reproducibility in mind, both for my own sake in organizing the steps of the pipeline and for those interested in understanding the nuts and bolts or even replicating the results independently. That being said, there are some steps that may be influenced by idiosyncracies of the configuration of the Poseidon HPC, specific versions of software, or release dates of reference sequence databases. 
+
+VERSIONS --> mostly conda, specified in yamls. R packages installed as outlined below, using most up to date as of January 1st, 2020. PRINT SESSION INFO! Specify versions of EnTAP and GO_MWU.
+
+DATABASES --> sequence databases (downloaded and on poseidon (nt blast contam)), EnTAP database, go.obo
 
 ### Overview of steps
 

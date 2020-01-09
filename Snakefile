@@ -40,7 +40,6 @@ DIAMOND_DB = expand('db/{wc1}.dmnd', wc1 = ['trembl','sprot'])
 UNIREF_REFORMAT = 'db/uniref90_rf.fasta.gz'
 DIAMONDP_ANNOT_OUT = expand('outputs/trinotate/diamondp.{wc1}.tsv', wc1=['trembl','sprot'])
 DIAMONDX_ANNOT_OUT = expand('outputs/trinotate/diamondx.{wc1}.tsv', wc1=['trembl','sprot'])
-DIAMONDX_XML = 'outputs/trinotate/diamondx.nr.xml'
 HMMSCAN_OUT = 'outputs/trinotate/hmmscan.out'
 GENE_TRANS_MAP = 'txms/rhithro/rhithro_txm_long_clean.gene_trans_map'
 TRINOTATE_INIT = 'outputs/track/trinotate_init.done'
@@ -48,20 +47,20 @@ TRINOTATE_LOAD = 'outputs/track/trinotate_load.done'
 TRINOTATE_ANNOT = 'outputs/trinotate/trinotate_annotations.tsv'
 TRINOTATE_STATS = 'outputs/trinotate/trinotate_stats.txt'
 
-
-#DIAMOND_ANNOT_OUT_SPLIT = expand('outputs/trinotate/{wc2}/diamond{wc3}.{wc1}.{wc2}.tsv',  wc1=PADDED_RANGE2, wc2=['nr','uniref90','trembl','sprot'], wc3=['x','p'])
-#CLEAN_CHUNKS_NT = expand('txms/rhithro/clean_chunks/rhithro_txm_long_clean.{wc1}.fasta', wc1=PADDED_RANGE2)
-#CLEAN_CHUNKS_AA = expand('txms/rhithro/clean_chunks/rhithro_txm_long_clean.{wc1}.fasta.transdecoder.pep', wc1=PADDED_RANGE2)
-
-
 ## GET SNAKEMAKEY
 
 rule all:
-    input: FASTQC_ZIP, FASTQC_HTML, LOXO_DB, LOXO_BLAST_RESULTS, CONTAM_LIST, CONTAM_RATES, CLEANED_READS, RHITHRO_CLEAN_CAT, RHITHRO_TXMS, RHITHRO_TXM_GENETRANSMAPS, PRELIM_TXM_IDXS, QUANT_CAT, EXN50, N50, TXM_LONG, DIRTY_CHUNKS, BLAST_CONTAM, BLAST_CONTAM_MERGED, BLAST_CONTAM_LIST, TXM_LONG_CLEAN, TRANSDECODER_OUT, RHITHRO_TXM_IDX, QUANT_OUT, QUANT_MAT, DOWNLOAD_DB_OUT, DIAMOND_DB, UNIREF_REFORMAT, DIAMONDP_ANNOT_OUT, DIAMONDX_ANNOT_OUT, DIAMONDX_XML, HMMSCAN_OUT, GENE_TRANS_MAP, TRINOTATE_INIT, TRINOTATE_LOAD, TRINOTATE_ANNOT, TRINOTATE_STATS,
+    input: FASTQC_ZIP, FASTQC_HTML, LOXO_DB, LOXO_BLAST_RESULTS, CONTAM_LIST, CONTAM_RATES, CLEANED_READS, RHITHRO_CLEAN_CAT, RHITHRO_TXMS, RHITHRO_TXM_GENETRANSMAPS, PRELIM_TXM_IDXS, QUANT_CAT, EXN50, N50, TXM_LONG, DIRTY_CHUNKS, BLAST_CONTAM, BLAST_CONTAM_MERGED, BLAST_CONTAM_LIST, TXM_LONG_CLEAN, RHITHRO_TXM_IDX, QUANT_OUT, QUANT_MAT, DOWNLOAD_DB_OUT, UNIREF_REFORMAT, 
     
-#DIAMOND_ANNOT_OUT_SPLIT
-#CLEAN_CHUNKS_NT
-#CLEAN_CHUNKS_AA
+################
+
+#If you would like to perform annotation with Trinotate instead of EnTAP, add the following variables to rule all
+
+#TRANSDECODER_OUT, TRINOTATE_SQL, DIAMOND_DB, HMMSCAN_OUT, GENE_TRANS_MAP, TRINOTATE_INIT, TRINOTATE_LOAD, TRINOTATE_ANNOT, TRINOTATE_STATS, DIAMONDP_ANNOT_OUT, DIAMONDX_ANNOT_OUT, 
+
+#then uncomment all rules that are commented out
+
+################
 
 #get fastqc results on all samples
 
@@ -82,7 +81,7 @@ rule fastqc:
 
 #looking at HTML reports shows that all samples are good except for MA_C_3. samples.txt has this row removed
 
-#blast trimmed reads to Carolyn's Loxo txm
+#blast trimmed reads to existing Loxo txm
 
 #make blast database from the Loxo txm
 
@@ -135,7 +134,7 @@ rule list_contam:
     shell:
         """
         #print seq headers that align over entire length of read w/ 98% ID
-        #field 8 is query alignment end, field 7 is query alignment start, field 16 is read length, field 3 is PID
+        #field 8 is query alignment end, field 7 is query alignment start, field 16 is read length, field 3 is %ID
         #so $8-$7+1 is the alignment length. if equals read length ($16) and PID>=98, print header and sort/uniq
         tail -n+4 {input.blast_results} | awk '$8-$7+1>=$16 && $3>=98  {{print $1}}' | sort | uniq > {output.seq_ids}
         """
@@ -145,21 +144,33 @@ rule contam_rates:
     output: CONTAM_RATES
     shell:
         """
+        #loop through the contam ID files and append number of lines (# of contam seq) and filename to new file
+        
         for file in `ls outputs/blast2loxo/*contam*`
         do
             wc -l $file >> outputs/blast2loxo/contam_count.txt
         done
         
+        #sort by filename
+        
         sort -k2 -o outputs/blast2loxo/contam_count.txt outputs/blast2loxo/contam_count.txt
+        
+        #count number reads in trimmed reads for each sample (handy counter for fastq format)
         
         for file in `ls trimmed_reads/*.fq`
         do
             awk '{{OFS="\t"}}{{s++}}END{{print FILENAME,s/4}}' $file >> outputs/blast2loxo/read_count.txt
         done
         
+        #sort by filename (so matches contam_count.txt)
+        
         sort -k1 -o outputs/blast2loxo/read_count.txt outputs/blast2loxo/read_count.txt
         
+        #paste the read counts and contam counts to single file
+        
         paste outputs/blast2loxo/read_count.txt outputs/blast2loxo/contam_count.txt > outputs/blast2loxo/combined.txt
+        
+        #divide contam count by read count and save to new file with original information
         
         awk '{{OFS="\t"}}{{print $1,$2,$3,$3/$2}}' outputs/blast2loxo/combined.txt > {output}
         
@@ -405,21 +416,22 @@ rule remove_blast_contam:
         mv outputs/blast/contam_lis_REMOVE.fasta {output.txm_long} #'contam_lis' instead of 'contam_list' because .strip() bug in fasta_subsetter. ignore for now, fix later
         """
 
-rule transdecoder:
-    input:
-        txm = TXM_LONG_CLEAN
-    output:
-        output = TRANSDECODER_OUT
-    conda:
-        "envs/transdecoder.yaml"
-    params:
-        dir = directory('outputs/transdecoder')
-    shell:
-        """
-        TransDecoder.LongOrfs -t {input.txm} -O {params.dir}
-        TransDecoder.Predict -t {input.txm} -O {params.dir}
-        mv rhithro_txm_long_clean.fasta.transdecoder.* outputs/transdecoder
-        """
+#rule transdecoder:
+#    input:
+#        txm = TXM_LONG_CLEAN
+#    output:
+#        output = TRANSDECODER_OUT
+#    conda:
+#        "envs/transdecoder.yaml"
+#    params:
+#        dir = directory('outputs/transdecoder')
+#    shell:
+#        """
+#        TransDecoder.LongOrfs -t {input.txm} -O {params.dir}
+#        TransDecoder.Predict -t {input.txm} -O {params.dir}
+#        mv rhithro_txm_long_clean.fasta.transdecoder.* outputs/transdecoder
+#        """
+
 #quantifying all except for MA_C_3 (b/c bad seq). leaving in NJ_P_4 even though it clustered with NH in pop gen, probably mislabeled. even if it's misassigned to population, still in the absent range and still infected. shouldn't matter
 
 rule prep_rhithro_ref:
@@ -494,21 +506,20 @@ rule quant_mat:
         """
 
 #get pfam and uniprot db and build Trinotate sqlite db. current releases as of 12/29/19
-#if i want to run EnTap, i have to redownload the sprot in fasta format (trinotate changed headers)
 
-rule build_trinotate_sql:
-    input:
-    output:
-        TRINOTATE_SQL
-    params:
-        dir = directory('db/')
-    conda:
-        "envs/trinotate.yaml"
-    shell:
-        """
-        cd {params.dir}
-        Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
-        """
+#rule build_trinotate_sql:
+#    input:
+#    output:
+#        TRINOTATE_SQL
+#    params:
+#        dir = directory('db/')
+#    conda:
+#        "envs/trinotate.yaml"
+#    shell:
+#        """
+#        cd {params.dir}
+#        Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
+#        """
 
 rule download_db:
     input:
@@ -553,218 +564,192 @@ rule reformat_uniref90:
 
 #prepare diamond databases for trinotate
 
-rule diamond_db: 
-    input:
-        sprot = 'db/uniprot_sprot.pep',
-        trembl = 'db/uniprot_trembl.fasta.gz'
-    output:
-        DIAMOND_DB
-    conda:
-        "envs/diamond.yaml"
-    params:
-        dir = directory('db')
-    shell:
-        """
-        cd {params.dir}
-        diamond makedb --in uniprot_trembl.fasta.gz --db trembl
-        diamond makedb --in uniprot_sprot.pep --db sprot
-        """
+#rule diamond_db: 
+#    input:
+#        sprot = 'db/uniprot_sprot.pep',
+#        trembl = 'db/uniprot_trembl.fasta.gz'
+#    output:
+#        DIAMOND_DB
+#    conda:
+#        "envs/diamond.yaml"
+#    params:
+#        dir = directory('db')
+#    shell:
+#        """
+#        cd {params.dir}
+#        diamond makedb --in uniprot_trembl.fasta.gz --db trembl
+#        diamond makedb --in uniprot_sprot.pep --db sprot
+#        """
+#
+#rule diamondp_annot:
+#    input:
+#        aa = 'outputs/transdecoder/rhithro_txm_long_clean.fasta.transdecoder.pep',
+#        db = 'db/{db}.dmnd'
+#    output:
+#        hits = 'outputs/trinotate/diamondp.{db}.tsv'
+#    conda:
+#        "envs/diamond.yaml"
+#    log:
+#        aa = 'logs/trinotate/diamondp_{db}.log',
+#    shell:
+#        """
+#        diamond blastp --query {input.aa} \
+#            --db {input.db} \
+#            --out {output.hits} \
+#            --threads 36 \
+#            --outfmt 6 \
+#            --evalue 0.001 \
+#            --sensitive \
+#            --block-size 8 \
+#            --index-chunks 1 \
+#            --max-target-seqs 1 1> {log.aa} 2>&1
+#        """
+#
+#rule diamondx_annot:
+#    input:
+#        nt = TXM_LONG_CLEAN,
+#        db = 'db/{db}.dmnd'
+#    output:
+#        hits = 'outputs/trinotate/diamondx.{db}.tsv',
+#    conda:
+#        "envs/diamond.yaml"
+#    log:
+#        nt = 'logs/trinotate/diamondx_{db}.log'
+#    shell:
+#        """
+#        diamond blastx --query {input.nt} \
+#            --db {input.db} \
+#            --out {output.hits} \
+#            --threads 36 \
+#            --outfmt 6 \
+#            --evalue 0.001 \
+#            --sensitive \
+#            --block-size 8 \
+#            --index-chunks 1 \
+#            --max-target-seqs 1 1> {log.nt} 2>&1
+#        """
 
-rule diamondp_annot:
-    input:
-        aa = 'outputs/transdecoder/rhithro_txm_long_clean.fasta.transdecoder.pep',
-        db = 'db/{db}.dmnd'
-    output:
-        hits = 'outputs/trinotate/diamondp.{db}.tsv'
-    conda:
-        "envs/diamond.yaml"
-    log:
-        aa = 'logs/trinotate/diamondp_{db}.log',
-    shell:
-        """
-        diamond blastp --query {input.aa} \
-            --db {input.db} \
-            --out {output.hits} \
-            --threads 36 \
-            --outfmt 6 \
-            --evalue 0.001 \
-            --sensitive \
-            --block-size 8 \
-            --index-chunks 1 \
-            --max-target-seqs 1 1> {log.aa} 2>&1
-        """
-
-rule diamondx_annot:
-    input:
-        nt = TXM_LONG_CLEAN,
-        db = 'db/{db}.dmnd'
-    output:
-        hits = 'outputs/trinotate/diamondx.{db}.tsv',
-    conda:
-        "envs/diamond.yaml"
-    log:
-        nt = 'logs/trinotate/diamondx_{db}.log'
-    shell:
-        """
-        diamond blastx --query {input.nt} \
-            --db {input.db} \
-            --out {output.hits} \
-            --threads 36 \
-            --outfmt 6 \
-            --evalue 0.001 \
-            --sensitive \
-            --block-size 8 \
-            --index-chunks 1 \
-            --max-target-seqs 1 1> {log.nt} 2>&1
-        """
-
-rule diamondx_xml: #for blast2go
-    input:
-        nt = TXM_LONG_CLEAN,
-        db = 'db/nr.dmnd'
-    output:
-        hits = 'outputs/trinotate/diamondx.nr.xml',
-    conda:
-        "envs/diamond.yaml"
-    log:
-        nt = 'logs/trinotate/diamondx_nr_xml.log'
-    shell:
-        """
-        diamond blastx --query {input.nt} \
-            --db {input.db} \
-            --out {output.hits} \
-            --threads 36 \
-            --outfmt 5 \
-            --evalue 0.001 \
-            --sensitive \
-            --block-size 8 \
-            --index-chunks 1 \
-            --max-target-seqs 1 1> {log.nt} 2>&1
-        """
-
-rule hmmscan:
-    input:
-        aa = 'outputs/transdecoder/rhithro_txm_long_clean.fasta.transdecoder.pep',
-        db = 'db/Pfam-A.hmm.h3f'
-    output:
-        hits = HMMSCAN_OUT
-    conda:
-        "envs/trinotate.yaml"
-    log:
-        'logs/trinotate/hmmscan.log'
-    shell:
-        """
-        hmmscan --cpu 36 \
-            --domtblout {output.hits} \
-            db/Pfam-A.hmm {input.aa} 1> {log} 2>&1
-        """
-
-rule make_gene_trans_map:
-    input:
-        TXM_LONG_CLEAN
-    output:
-        GENE_TRANS_MAP
-    conda:
-        "envs/trinity.yaml"
-    shell:
-        """
-        get_Trinity_gene_to_trans_map.pl {input} > {output}
-        """
-
-rule trinotate_init:
-    input:
-        txm_nt = TXM_LONG_CLEAN,
-        txm_aa = 'outputs/transdecoder/rhithro_txm_long_clean.fasta.transdecoder.pep',
-        gtm = GENE_TRANS_MAP,
-        sqlite = ancient('db/Trinotate.sqlite') #ignore timestamp. output is same as input so do wan't to run again
-    output:
-        touch(TRINOTATE_INIT)
-    conda:
-        "envs/trinotate.yaml"
-    log:
-        "logs/trinotate/trinotate_init.txt"
-    shell:
-        """
-        Trinotate {input.sqlite} init --gene_trans_map {input.gtm} \
-            --transcript_fasta {input.txm_nt} \
-            --transdecoder_pep {input.txm_aa} 1> {log} 2>&1
-        """
-
-rule trinotate_load:
-    input:
-        init_done = TRINOTATE_INIT,
-        sqlite = ancient('db/Trinotate.sqlite'),
-        blastp_sprot = 'outputs/trinotate/diamondp.sprot.tsv',
-        blastx_sprot = 'outputs/trinotate/diamondx.sprot.tsv',
-        blastp_trembl = 'outputs/trinotate/diamondp.trembl.tsv',
-        blastx_trembl = 'outputs/trinotate/diamondx.trembl.tsv',
-        hmmer = 'outputs/trinotate/hmmscan.out'
-    output:
-        touch(TRINOTATE_LOAD)
-    conda:
-        "envs/trinotate.yaml"
-    log:
-        "logs/trinotate/trinotate_load.txt"
-    shell:
-        """
-        Trinotate {input.sqlite} \
-            LOAD_swissprot_blastp \
-            {input.blastp_sprot} 1> {log} 2>&1
-        Trinotate {input.sqlite} \
-            LOAD_swissprot_blastx \
-            {input.blastx_sprot} 1>> {log} 2>&1
-        Trinotate {input.sqlite} \
-            LOAD_custom_blast \
-            --outfmt6 {input.blastp_trembl} \
-            --prog blastp \
-            --dbtype blastp_trembl 1>> {log} 2>&1
-        Trinotate {input.sqlite} \
-            LOAD_custom_blast \
-            --outfmt6 {input.blastx_trembl} \
-            --prog blastx \
-            --dbtype blastx_trembl 1>> {log} 2>&1
-        Trinotate {input.sqlite} \
-            LOAD_pfam \
-            {input.hmmer} 1>> {log} 2>&1
-        """
-
-rule trinotate_report:
-    input:
-        load_done = TRINOTATE_LOAD,
-        sqlite = ancient('db/Trinotate.sqlite') 
-    output:
-        trinotate_out = TRINOTATE_ANNOT
-    conda:
-        "envs/trinotate.yaml"
-    log:
-        "logs/trinotate/trinotate_annot.txt"
-    shell:
-        """
-        Trinotate {input.sqlite} \
-            report \
-            -E 1e-5 \
-            > {output.trinotate_out} 2> {log}
-        """
-
-rule trinotate_stats:
-    input:
-        TRINOTATE_ANNOT
-    output:
-        TRINOTATE_STATS
-    conda:
-        "envs/trinotate.yaml"
-    log:
-        "logs/trinotate/trinotate_stats.txt"
-    shell:
-        """
-        count_table_fields.pl {input} > {output} 2> {log}
-        """
+#rule hmmscan:
+#    input:
+#        aa = 'outputs/transdecoder/rhithro_txm_long_clean.fasta.transdecoder.pep',
+#        db = 'db/Pfam-A.hmm.h3f'
+#    output:
+#        hits = HMMSCAN_OUT
+#    conda:
+#        "envs/trinotate.yaml"
+#    log:
+#        'logs/trinotate/hmmscan.log'
+#    shell:
+#        """
+#        hmmscan --cpu 36 \
+#            --domtblout {output.hits} \
+#            db/Pfam-A.hmm {input.aa} 1> {log} 2>&1
+#        """
+#
+#rule make_gene_trans_map:
+#    input:
+#        TXM_LONG_CLEAN
+#    output:
+#        GENE_TRANS_MAP
+#    conda:
+#        "envs/trinity.yaml"
+#    shell:
+#        """
+#        get_Trinity_gene_to_trans_map.pl {input} > {output}
+#        """
+#
+#rule trinotate_init:
+#    input:
+#        txm_nt = TXM_LONG_CLEAN,
+#        txm_aa = 'outputs/transdecoder/rhithro_txm_long_clean.fasta.transdecoder.pep',
+#        gtm = GENE_TRANS_MAP,
+#        sqlite = ancient('db/Trinotate.sqlite') #ignore timestamp. output is same as input so do wan't to run again
+#    output:
+#        touch(TRINOTATE_INIT)
+#    conda:
+#        "envs/trinotate.yaml"
+#    log:
+#        "logs/trinotate/trinotate_init.txt"
+#    shell:
+#        """
+#        Trinotate {input.sqlite} init --gene_trans_map {input.gtm} \
+#            --transcript_fasta {input.txm_nt} \
+#            --transdecoder_pep {input.txm_aa} 1> {log} 2>&1
+#        """
+#
+#rule trinotate_load:
+#    input:
+#        init_done = TRINOTATE_INIT,
+#        sqlite = ancient('db/Trinotate.sqlite'),
+#        blastp_sprot = 'outputs/trinotate/diamondp.sprot.tsv',
+#        blastx_sprot = 'outputs/trinotate/diamondx.sprot.tsv',
+#        blastp_trembl = 'outputs/trinotate/diamondp.trembl.tsv',
+#        blastx_trembl = 'outputs/trinotate/diamondx.trembl.tsv',
+#        hmmer = 'outputs/trinotate/hmmscan.out'
+#    output:
+#        touch(TRINOTATE_LOAD)
+#    conda:
+#        "envs/trinotate.yaml"
+#    log:
+#        "logs/trinotate/trinotate_load.txt"
+#    shell:
+#        """
+#        Trinotate {input.sqlite} \
+#            LOAD_swissprot_blastp \
+#            {input.blastp_sprot} 1> {log} 2>&1
+#        Trinotate {input.sqlite} \
+#            LOAD_swissprot_blastx \
+#            {input.blastx_sprot} 1>> {log} 2>&1
+#        Trinotate {input.sqlite} \
+#            LOAD_custom_blast \
+#            --outfmt6 {input.blastp_trembl} \
+#            --prog blastp \
+#            --dbtype blastp_trembl 1>> {log} 2>&1
+#        Trinotate {input.sqlite} \
+#            LOAD_custom_blast \
+#            --outfmt6 {input.blastx_trembl} \
+#            --prog blastx \
+#            --dbtype blastx_trembl 1>> {log} 2>&1
+#        Trinotate {input.sqlite} \
+#            LOAD_pfam \
+#            {input.hmmer} 1>> {log} 2>&1
+#        """
+#
+#rule trinotate_report:
+#    input:
+#        load_done = TRINOTATE_LOAD,
+#        sqlite = ancient('db/Trinotate.sqlite') 
+#    output:
+#        trinotate_out = TRINOTATE_ANNOT
+#    conda:
+#        "envs/trinotate.yaml"
+#    log:
+#        "logs/trinotate/trinotate_annot.txt"
+#    shell:
+#        """
+#        Trinotate {input.sqlite} \
+#            report \
+#            -E 1e-5 \
+#            > {output.trinotate_out} 2> {log}
+#        """
+#
+#rule trinotate_stats:
+#    input:
+#        TRINOTATE_ANNOT
+#    output:
+#        TRINOTATE_STATS
+#    conda:
+#        "envs/trinotate.yaml"
+#    log:
+#        "logs/trinotate/trinotate_stats.txt"
+#    shell:
+#        """
+#        count_table_fields.pl {input} > {output} 2> {log}
+#        """
 
 
 #rule clean: #clean up
 #    shell:
 #        """
-#        rm -rf outputs/*
-#        rm -rf logs/*
-#        rm -rf cat_seq/
+#
 #        """

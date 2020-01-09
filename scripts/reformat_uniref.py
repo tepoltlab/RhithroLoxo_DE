@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+#Jan 2020 by Zachary Tobias. Reformats UniRef90 database header taxonomic information so it can be parsed by EnTAP for use in contaminant filtering and taxonomic weighting
+
 Usage = "USAGE: reformat_uniref.py PATH_IN PATH_OUT"
 
 import sys
