@@ -2,7 +2,7 @@
 
 #### by Zachary Tobias
 
-This GitHub repository contains all necessary scripts and metadata for the execution of a differential expression analysis pipeline of an RNA-seq dataset from experimental infections of various populations of the mud crab _Rhithropanopeus harrisi_ with differing degrees of historical exposure to the parasitic barnacle _Loxothylacus panopaei_. This repository serves as a supplement to my first-year research report entilted "TITLE HERE!". 
+This GitHub repository contains all necessary scripts and metadata for the execution of a differential expression analysis pipeline of an RNA-seq dataset from experimental infections of various populations of the mud crab _Rhithropanopeus harrisi_ with differing degrees of historical exposure to the parasitic barnacle _Loxothylacus panopaei_. This repository serves as a supplement to my first-year research report entilted "Comparative transcriptomics reveals signatures of parasitic manipulation and coevolution between an estuarine crab and an invasive parasite". Note that a variety of analyses/data explorations are documented in this repository that are not included in the final report. 
 
 The analysis starts from previously demultiplexed, trimmed, and cleaned 50bp, single-end sequence reads from an Illumina HiSeq 2000. It also utilizes a previously generated transcriptome for the parasite. These files can be made available upon request. Aside from these two exceptions, all steps of the pipeline are included herein and should be readily repeatable by readers familiar with basic programming in bash, R, and python. Most commands up through the generation of the differential expression matrix are executed using the workflow engine 'Snakemake', relying on packages installed in conda environments and a few borrowed or custom scripts. The major exception to this are those commands with the functional annotation package EnTAP v0.9.0-beta, which lacks a conda distribution and must be installed manually. Instructions for installation are included below in the section below entitled "EnTAP Setup"; additional instructions can be found [here](https://entap.readthedocs.io/en/latest/introduction.html). 
 
@@ -12,18 +12,49 @@ All steps in the pipeline were carried out on Poseidon, the high performance clu
 
 This analysis was performed with ease of reproducibility in mind, both for my own sake in organizing the steps of the pipeline and for those interested in understanding the nuts and bolts or even replicating the results independently. That being said, there are some steps that may be influenced by idiosyncracies of the configuration of the Poseidon HPC, specific versions of software, or release dates of reference sequence databases. 
 
-VERSIONS --> mostly conda, specified in yamls. R packages installed as outlined below, using most up to date as of January 1st, 2020. PRINT SESSION INFO! Specify versions of EnTAP and GO_MWU.
+Version control is primarily handled through conda. The `envs/` directory contains all of the necessary .yaml files for creating the various environments for different steps in the pipeline. These .yaml files are called upon automatically in the Snakemake file or manually before launching jupyter notebooks, in particular for running R within them (see below). The `envs/` directory also contains `sessionInfo.txt` files corresponding to the analyses performed in R. These indicate which packages and versions are in the R workspace. I have also included the `base.yaml` file, which reflects the base conda environment present on Poseidon. 
 
-DATABASES --> sequence databases (downloaded and on poseidon (nt blast contam)), EnTAP database, go.obo
-
-### Overview of steps
-
+Reference sequence databases were downloaded from the sources as specified in the Snakemake files, with the exception of the ncbi nt database which was already present on Poseidon. The nt database used herein was the Dec 31 2018 release. UniProt's Trembl, sprot, and UniRef90 and NCBI's nr and RefSeq databases were current as of Jan 3 2020. The eggNOG v4.5 database was downloaded automatically by EnTAP.
 
 ### Executing the `Snakemake` pipeline
 
+From within the `snakemake` conda environment, which can be created from the `snakemake.yaml` file, run the following code:
+
+`snakemake --jobs 20 --use-conda --cluster-config envs/cluster.yaml --cluster "sbatch --parsable --partition={cluster.queue} --job-name=RhithroLoxo_DE.{rule}.{wildcards} --mem={cluster.mem}gb --time={cluster.time} --ntasks={cluster.threads} --nodes={cluster.nodes}"`
+
+### Overview of steps
+
+The pipeline begins from previously demultiplexed, trimmed, and QC'ed reads. The subsequent steps proceed as follows:
+
+* Run FastQC to get quality information
+* Remove sample MA_C_3 from analysis because of sequencing failure
+* Make blast database from the previously constructed L. panopaei transcriptome
+* Use MagicBLAST to map filtered reads to L. panopaei transcriptome
+* List contaminant transcripts
+* Calculate percentage of contaminant transcripts in each library
+* Remove contaminant transcripts from libraries
+* Concatenate reads from control crabs into single file
+* Assemble R. harrisii transcriptomes from concatenated reads using range of parameter values
+* Make salmon index for all transcriptomes
+* Perform quantification for each transcriptome using Salmon
+* Get transcriptome statistics with Trinity
+* Use jupyter notebook (`jupyter_notebooks/txm_compare.ipynb`) to evaluate transcriptome quality
+* Using the highest quality transcriptome (kmer25cov1), retain just longest isoform per gene
+* Split transcriptome into subsets for efficient aligning in contaminant search
+* Use blastn to search for contamination in each subset
+* Merge blast results
+* Use ete3 and custom script (`scripts/map_contam_ids.py`) to get hierarchical taxonomic information from blast hits and exclude contaminant taxa (specified within script)
+* Use custom script (`scripts/fasta_subsetter.py`) to remove contaminants 
+* Make salmon index for filtered transcriptome
+* Perform transcript quantification for all samples excluding MA_C_3
+* Assemble quantification data into single expression matrix
+* Download sequence databases
+* Reformat UniRef90 headers using custom script (`scripts/reformat_uniref.py`) for parsing by EnTAP
+
+The remaining steps are performed from the command line (for EnTAP) or from within jupyter notebooks running R (for analyses). See the sections below for more detail.
 
 
-### Running `DESeq2` and `WCGNA`  from within a jupyter notebook on HPC compute node
+### Running `DESeq2`  and `WCGNA`  from within jupyter notebooks on HPC compute node
 
 Running the downstream differential expression and associated analyses interactively is great for fine-tuning code and exploring the data. As such, I chose to perform this analysis from within jupyter notebooks instead of writing .R scripts to be executed within the Snakemake pipeline. DESeq2 is performed in a notebook  called `DESeq2_RhithroLoxo.ipynb` and WGCNA in two notebooks, one for contrasting module expression with infection status and sex, `WGCNA_FP.ipynb`, and another for contrasting module expression with infection status and range, `WGCNA_noFP.ipynb` . These can be found in the `jupyter_notebooks/` directory within this repo. To harness the computational power of Poseidon (more RAM, parallelization, etc.), I launched the jupyter notebooks from within an interactive session on a compute node, instead of from one of the two login nodes. All of the notebooks operate within the `deseq2` conda environment in the `envs/` directory. Big thanks to Harriet Alexander for providing the instructions for this on her [blog](https://alexanderlabwhoi.github.io/post/2019-03-08_jpn_slurm/)!
 
@@ -79,7 +110,7 @@ install.packages("ape")
 install.package("cowplot")
 ```
 
-Okay now you're all set to actually run the DESeq2 and WGCNA analyses from the jupyter notebook! 
+Okay now you're all set to actually run the DESeq2 and WGCNA analyses from their respective jupyter notebooks! 
 
 ### Running `GO_MWU`
 
@@ -150,8 +181,3 @@ sbatch `run_EnTAP.sh`
 
 This creates a myriad of output files in the `EnTAP/entap_outfiles` directory. The eggNOG mapping results are reformatted for input into `GO_MWU` using the script `EnTAP2GO.py` in the `scripts/` folder.
 
-RUNNING THE ENTAP2GO.PY SCRIPT HERE!
-
-```
-
-```
