@@ -1,10 +1,10 @@
+## This snakefile contains all steps in the processing pipeline up through the generation of the expression matrix for use in DESeq2. This includes annotation with EnTAP, so before running this pipeline it is imperative that EnTAP be downloaded and set up according to instructions in the README.md
+
 ## run with this snakemake command: 
 
 ## snakemake --jobs 20 --use-conda --cluster-config envs/cluster.yaml --cluster "sbatch --parsable --partition={cluster.queue} --job-name=RhithroLoxo_DE.{rule}.{wildcards} --mem={cluster.mem}gb --time={cluster.time} --ntasks={cluster.threads} --nodes={cluster.nodes}"
 
 ## DEFINE VARIABLES 
-
-#configfile: 'envs/trinity_config.yaml'
 
 WILDCARDS = glob_wildcards('trimmed_reads/{sample}.fq') #define wildcards object that will contain sample names
 FASTQC_ZIP = expand('outputs/fastqc/{wc1}_fastqc.zip', wc1=WILDCARDS.sample)
@@ -29,38 +29,22 @@ BLAST_CONTAM = expand('outputs/blast/blast_contam.{wc1}.tsv', wc1=PADDED_RANGE)
 BLAST_CONTAM_MERGED = 'outputs/blast/blast_contam.merged.tsv'
 TXM_LONG_CLEAN = 'txms/rhithro/rhithro_txm_long_clean.fasta'
 BLAST_CONTAM_LIST = 'outputs/blast/contam_list.txt'
-TRANSDECODER_OUT = expand('outputs/transdecoder/rhithro_txm_long_clean.fasta.transdecoder.{ext}', ext=["pep","cds","gff3","bed"])
-RHITHRO_TXM_IDX = 'txms/rhithro/rhithro_txm_long_clean.fasta.salmon_quasi.idx'
+DOWNLOAD_DB_OUT = expand('db/{wc1}', wc1=['uniref90.fasta.gz','uniprot_trembl.fasta.gz','nr.gz','uniprot_sprot.fasta.gz','refseq_complete.faa.gz'])
+UNIREF_REFORMAT = 'db/uniref90_rf.fasta.gz'
+ENTAP_CONFIG_OUT = expand('EnTAP/entap_outfiles/bin/{wc1}.dmnd', wc1=['uniref90_rf','uniprot_trembl','nr','uniprot_sprot','refseq_complete'])
+ENTAP_ANNOT_OUT = 'EnTAP/entap_outfiles/final_results/final_annotations_lvl0.tsv'
+ENTAP_CONTAM = 'EnTAP/entap_outfiles/final_results/final_annotations_contam_lvl0.tsv'
+TXM_LONG_CLEAN_CLEAN = 'txms/rhithro/rhithro_txm_long_clean_clean.fasta'
+RHITHRO_TXM_IDX = 'txms/rhithro/rhithro_txm_long_clean_clean.fasta.salmon_quasi.idx'
 DE_SAMPLES = ['AP_C_1','AP_C_2','AP_C_3','AP_C_4','AP_C_5','AP_C_6','AP_P_1','AP_P_2','AP_P_3','AP_P_6','FP_C_10','FP_C_11','FP_C_12','FP_C_13','FP_C_5','FP_C_9','FP_P_10','FP_P_4','FP_P_5','FP_P_7','FP_P_8','FP_P_9','LA_C_1','LA_C_2','LA_C_3','LA_C_4','LA_C_6','LA_C_8','LA_F_1','LA_P_1','LA_P_2','MA_C_1','MA_C_2','MA_C_4','MD_C_10','MD_C_11','MD_C_12','MD_C_1','MD_C_4','MD_C_7','MD_F_4','MD_P_1','ML_C_10','ML_C_2','ML_C_3','ML_C_5','ML_C_7','ML_C_9','ML_P_1','ML_P_2','NH_C_11','NH_C_12','NH_C_13','NH_C_5','NH_C_8','NH_C_9','NH_P_1','NH_P_2','NH_P_3','NH_P_4','NH_P_5','NH_P_6','NJ_C_10','NJ_C_11','NJ_C_12','NJ_C_13','NJ_C_14','NJ_C_6','NJ_P_1','NJ_P_3','NJ_P_4','NJ_P_5','NJ_P_6','NJ_P_7','SC_C_12','SC_C_14','SC_C_2','SC_C_6','SC_C_7','SC_C_9','SC_P_1','SC_P_2','SC_P_3']
 QUANT_OUT = expand('outputs/quant/{wc1}/quant.sf', wc1=DE_SAMPLES)
 QUANT_MAT = expand('outputs/quant/salmon.isoform.{wc1}', wc1 = ['counts.matrix','TPM.not_cross_norm'])
-DOWNLOAD_DB_OUT = expand('db/{wc1}', wc1=['uniref90.fasta.gz','uniprot_trembl.fasta.gz','nr.gz','Pfam-A.hmm.h3f','uniprot_sprot.fasta.gz','refseq_complete.faa.gz'])
-TRINOTATE_SQL = ['db/Trinotate.sqlite','db/uniprot_sprot.dat.gz','db/uniprot_sprot.pep']
-DIAMOND_DB = expand('db/{wc1}.dmnd', wc1 = ['trembl','sprot'])
-UNIREF_REFORMAT = 'db/uniref90_rf.fasta.gz'
-DIAMONDP_ANNOT_OUT = expand('outputs/trinotate/diamondp.{wc1}.tsv', wc1=['trembl','sprot'])
-DIAMONDX_ANNOT_OUT = expand('outputs/trinotate/diamondx.{wc1}.tsv', wc1=['trembl','sprot'])
-HMMSCAN_OUT = 'outputs/trinotate/hmmscan.out'
-GENE_TRANS_MAP = 'txms/rhithro/rhithro_txm_long_clean.gene_trans_map'
-TRINOTATE_INIT = 'outputs/track/trinotate_init.done'
-TRINOTATE_LOAD = 'outputs/track/trinotate_load.done'
-TRINOTATE_ANNOT = 'outputs/trinotate/trinotate_annotations.tsv'
-TRINOTATE_STATS = 'outputs/trinotate/trinotate_stats.txt'
+
 
 ## GET SNAKEMAKEY
 
 rule all:
-    input: FASTQC_ZIP, FASTQC_HTML, LOXO_DB, LOXO_BLAST_RESULTS, CONTAM_LIST, CONTAM_RATES, CLEANED_READS, RHITHRO_CLEAN_CAT, RHITHRO_TXMS, RHITHRO_TXM_GENETRANSMAPS, PRELIM_TXM_IDXS, QUANT_CAT, EXN50, N50, TXM_LONG, DIRTY_CHUNKS, BLAST_CONTAM, BLAST_CONTAM_MERGED, BLAST_CONTAM_LIST, TXM_LONG_CLEAN, RHITHRO_TXM_IDX, QUANT_OUT, QUANT_MAT, DOWNLOAD_DB_OUT, UNIREF_REFORMAT, 
-    
-################
-
-#If you would like to perform annotation with Trinotate instead of EnTAP, add the following variables to rule all
-
-#TRANSDECODER_OUT, TRINOTATE_SQL, DIAMOND_DB, HMMSCAN_OUT, GENE_TRANS_MAP, TRINOTATE_INIT, TRINOTATE_LOAD, TRINOTATE_ANNOT, TRINOTATE_STATS, DIAMONDP_ANNOT_OUT, DIAMONDX_ANNOT_OUT, 
-
-#then uncomment all rules that are commented out
-
-################
+    input: FASTQC_ZIP, FASTQC_HTML, LOXO_DB, LOXO_BLAST_RESULTS, CONTAM_LIST, CONTAM_RATES, CLEANED_READS, RHITHRO_CLEAN_CAT, RHITHRO_TXMS, RHITHRO_TXM_GENETRANSMAPS, PRELIM_TXM_IDXS, QUANT_CAT, EXN50, N50, TXM_LONG, DIRTY_CHUNKS, BLAST_CONTAM, BLAST_CONTAM_MERGED, BLAST_CONTAM_LIST, DOWNLOAD_DB_OUT, UNIREF_REFORMAT, ENTAP_CONFIG_OUT, TXM_LONG_CLEAN, ENTAP_ANNOT_OUT, ENTAP_CONTAM, TXM_LONG_CLEAN_CLEAN, RHITHRO_TXM_IDX, QUANT_OUT, QUANT_MAT,
 
 #get fastqc results on all samples
 
@@ -347,15 +331,15 @@ rule split_dirty:
         mv txms/rhithro/rhithro_txm_long.fasta.gdx {params.dir}
         """
 
-#blast chunks against nt. db release Dec 31 2018
+#blast chunks against nt. db release Dec 31 2018. uses blast module on poseidon instead of conda install. poseidon's blast db
+#this is initial round of txm contaminant filtering, using blastn for nucleotide matches (to include ribosomal seq). 
+#additional contaminant filtering after annotation but before transcript quantification
 
 rule blast_contam:
     input:
         txm = 'txms/rhithro/dirty_chunks/rhithro_txm_long.{wc1}.fasta'
     output:
         results = 'outputs/blast/blast_contam.{wc1}.tsv'
-#    conda:
-#        "envs/blast.yaml" #gave up on trying to use posedion blastdb with with conda install of blast. using poseidon's module. 2.7.1
     shell:
         """
         module load bio blast/2.7.1
@@ -368,7 +352,7 @@ rule blast_contam:
             -max_hsps 1 \
             -num_threads 35 \
             -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore stitle staxids" \
-            -out {output.results}       
+            -out {output.results}           
         """
         
 #merge blast results
@@ -416,31 +400,125 @@ rule remove_blast_contam:
         mv outputs/blast/contam_lis_REMOVE.fasta {output.txm_long} #'contam_lis' instead of 'contam_list' because .strip() bug in fasta_subsetter. ignore for now, fix later
         """
 
-#rule transdecoder:
-#    input:
-#        txm = TXM_LONG_CLEAN
-#    output:
-#        output = TRANSDECODER_OUT
-#    conda:
-#        "envs/transdecoder.yaml"
-#    params:
-#        dir = directory('outputs/transdecoder')
-#    shell:
-#        """
-#        TransDecoder.LongOrfs -t {input.txm} -O {params.dir}
-#        TransDecoder.Predict -t {input.txm} -O {params.dir}
-#        mv rhithro_txm_long_clean.fasta.transdecoder.* outputs/transdecoder
-#        """
+#now we will move on to annotation. first download reference databases for use in EnTAP. it can use up to five. here i have specified UniProt's uniref90, trembl, and sprot, and NCBI's nr and refseq databases.  
 
-#quantifying all except for MA_C_3 (b/c bad seq). leaving in NJ_P_4 even though it clustered with NH in pop gen, probably mislabeled. even if it's misassigned to population, still in the absent range and still infected. shouldn't matter
+rule download_db:
+    input:
+    output:
+        DOWNLOAD_DB_OUT
+    params:
+        dir = directory('db/')
+    shell:
+        """
+        cd {params.dir}
+        wget ftp://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref90/uniref90.fasta.gz
+        wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_trembl.fasta.gz
+        wget ftp://ftp.ncbi.nih.gov/blast/db/FASTA/nr.gz
+        wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz
+        wget ftp://ftp.ncbi.nlm.nih.gov/refseq/release/complete/complete.nonredundant_protein.*.protein.faa.gz
+        cat complete.nonredundant_protein.*.protein.faa.gz > refseq_complete.faa.gz
+        rm complete.nonredundant_protein.*.protein.faa.gz
+        """
+
+#EnTAP parses taxonomic information from reference database headers for contaminant filtering and taxonomic weighting. the existing uniref header format is incompatible with EnTAP, so i have written a script to reformat the headers so they can be parsed by EnTAP
+
+rule reformat_uniref90:
+    input:
+        db = 'db/uniref90.fasta.gz',
+        script = 'scripts/reformat_uniref.py'
+    output:
+        UNIREF_REFORMAT
+    params:
+        dir = directory('db/')
+    shell:
+        """
+        cd {params.dir}
+        gunzip -c ../{input.db} > uniref90.fasta
+        python ../{input.script} uniref90.fasta uniref90_rf.fasta
+        gzip uniref90_rf.fasta
+        rm uniref90.fasta
+        """
+
+#configure EnTAP. this indexes the reference databases into diamond format
+
+rule configure_EnTAP:
+    input:
+        UNIREF_REFORMAT
+    output:
+        ENTAP_CONFIG_OUT
+    params:
+        dir = directory('EnTAP/')
+    shell:
+        """
+        cd {params.dir}
+        EnTAP --config -d ../db/nr.gz \
+            -d ../db/uniprot_trembl.fasta.gz \
+            -d ../db/refseq_complete.faa.gz \
+            -d ../db/uniprot_sprot.fasta.gz \
+            -d ../db/uniref90_rf.fasta.gz \
+            -t 35
+        """
+#run EnTAP
+
+rule run_EnTAP:
+    input:
+        config = ENTAP_CONFIG_OUT,
+        txm = TXM_LONG_CLEAN,
+    output:
+        ENTAP_ANNOT_OUT,
+        ENTAP_CONTAM
+    params:
+        dir = directory('EnTAP/')
+    shell:
+        """
+        cd {params.dir}
+        EnTAP --runN -i ../{input.txm} \
+            -d entap_outfiles/bin/nr.dmnd \
+            -d entap_outfiles/bin/refseq_complete.dmnd \
+            -d entap_outfiles/bin/uniprot_sprot.dmnd \
+            -d entap_outfiles/bin/uniprot_trembl.dmnd \
+            -d entap_outfiles/bin/uniref90_rf.dmnd \
+            -t 35 \
+            -c bacteria \
+            -c archaea \
+            -c viruses \
+            -c platyhelminthes \
+            -c nematoda \
+            -c fungi \
+            -c alveolata \
+            -c viridiplantae \
+            -c rhodophyta \
+            -c amoebozoa \
+            -c rhizaria \
+            -c stramenopiles \
+            -c rhizocephala \
+            -c entoniscidae \
+            --taxon brachyura
+        """
+
+rule remove_EnTAP_contam:
+    input:
+        contam = ENTAP_CONTAM,
+        txm = TXM_LONG_CLEAN,
+        script = {'scripts/fasta_subsetter.py'}
+    output:
+        txm = TXM_LONG_CLEAN_CLEAN
+    shell:
+        """
+        awk 'FNR>1 {{print ">"$1}}' {input.contam} > outputs/entap_contam.txt
+        python {input.script} {input.txm} outputs/entap_contam.txt REMOVE
+        mv outputs/entap_contam_REMOVE.fasta {output.txm}
+        """
+
+#quantifying all except for MA_C_3 (b/c bad seq). Sample IDs specified in DE_SAMPLES
 
 rule prep_rhithro_ref:
     input:
-        txm = TXM_LONG_CLEAN
+        txm = TXM_LONG_CLEAN_CLEAN
     conda:
         "envs/trinity.yaml"
     output:
-        idx = directory('txms/rhithro/rhithro_txm_long_clean.fasta.salmon_quasi.idx')
+        idx = directory('txms/rhithro/rhithro_txm_long_clean_clean.fasta.salmon_quasi.idx')
     log:
         'logs/trinity/prep_rhithro_ref.log'
     shell:
@@ -455,7 +533,7 @@ rule prep_rhithro_ref:
 
 rule quant:
     input:
-        txm = TXM_LONG_CLEAN,
+        txm = TXM_LONG_CLEAN_CLEAN,
         metadata = 'metadata/trinity_samples.txt',
         idx = RHITHRO_TXM_IDX,
         reads = expand('reads_decontam/{sample}_clean.fq', sample=DE_SAMPLES)
@@ -504,249 +582,6 @@ rule quant_mat:
             --name_sample_by_basedir \
             --quant_files ../../{input.quant_paths} 1> ../../{log} 2>&1
         """
-
-#get pfam and uniprot db and build Trinotate sqlite db. current releases as of 12/29/19
-
-#rule build_trinotate_sql:
-#    input:
-#    output:
-#        TRINOTATE_SQL
-#    params:
-#        dir = directory('db/')
-#    conda:
-#        "envs/trinotate.yaml"
-#    shell:
-#        """
-#        cd {params.dir}
-#        Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
-#        """
-
-rule download_db:
-    input:
-    output:
-        DOWNLOAD_DB_OUT
-    params:
-        dir = directory('db/')
-    conda:
-        "envs/trinotate.yaml"
-    shell:
-        """
-        cd {params.dir}
-        Build_Trinotate_Boilerplate_SQLite_db.pl Trinotate
-        gunzip Pfam-A.hmm.gz
-        hmmpress Pfam-A.hmm
-        wget ftp://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref90/uniref90.fasta.gz
-        wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_trembl.fasta.gz
-        wget ftp://ftp.ncbi.nih.gov/blast/db/FASTA/nr.gz
-        wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz
-        wget ftp://ftp.ncbi.nlm.nih.gov/refseq/release/complete/complete.nonredundant_protein.*.protein.faa.gz
-        cat complete.nonredundant_protein.*.protein.faa.gz > refseq_complete.faa.gz
-        rm complete.nonredundant_protein.*.protein.faa.gz
-        """
-
-rule reformat_uniref90:
-    input:
-        db = 'db/uniref90.fasta.gz',
-        script = 'scripts/reformat_uniref.py'
-    output:
-        UNIREF_REFORMAT
-    params:
-        dir = directory('db/')
-    shell:
-        """
-        cd {params.dir}
-        gunzip -c ../{input.db} > uniref90.fasta
-        python ../{input.script} uniref90.fasta uniref90_rf.fasta
-        gzip uniref90_rf.fasta
-        rm uniref90.fasta
-        """
-
-
-#prepare diamond databases for trinotate
-
-#rule diamond_db: 
-#    input:
-#        sprot = 'db/uniprot_sprot.pep',
-#        trembl = 'db/uniprot_trembl.fasta.gz'
-#    output:
-#        DIAMOND_DB
-#    conda:
-#        "envs/diamond.yaml"
-#    params:
-#        dir = directory('db')
-#    shell:
-#        """
-#        cd {params.dir}
-#        diamond makedb --in uniprot_trembl.fasta.gz --db trembl
-#        diamond makedb --in uniprot_sprot.pep --db sprot
-#        """
-#
-#rule diamondp_annot:
-#    input:
-#        aa = 'outputs/transdecoder/rhithro_txm_long_clean.fasta.transdecoder.pep',
-#        db = 'db/{db}.dmnd'
-#    output:
-#        hits = 'outputs/trinotate/diamondp.{db}.tsv'
-#    conda:
-#        "envs/diamond.yaml"
-#    log:
-#        aa = 'logs/trinotate/diamondp_{db}.log',
-#    shell:
-#        """
-#        diamond blastp --query {input.aa} \
-#            --db {input.db} \
-#            --out {output.hits} \
-#            --threads 36 \
-#            --outfmt 6 \
-#            --evalue 0.001 \
-#            --sensitive \
-#            --block-size 8 \
-#            --index-chunks 1 \
-#            --max-target-seqs 1 1> {log.aa} 2>&1
-#        """
-#
-#rule diamondx_annot:
-#    input:
-#        nt = TXM_LONG_CLEAN,
-#        db = 'db/{db}.dmnd'
-#    output:
-#        hits = 'outputs/trinotate/diamondx.{db}.tsv',
-#    conda:
-#        "envs/diamond.yaml"
-#    log:
-#        nt = 'logs/trinotate/diamondx_{db}.log'
-#    shell:
-#        """
-#        diamond blastx --query {input.nt} \
-#            --db {input.db} \
-#            --out {output.hits} \
-#            --threads 36 \
-#            --outfmt 6 \
-#            --evalue 0.001 \
-#            --sensitive \
-#            --block-size 8 \
-#            --index-chunks 1 \
-#            --max-target-seqs 1 1> {log.nt} 2>&1
-#        """
-
-#rule hmmscan:
-#    input:
-#        aa = 'outputs/transdecoder/rhithro_txm_long_clean.fasta.transdecoder.pep',
-#        db = 'db/Pfam-A.hmm.h3f'
-#    output:
-#        hits = HMMSCAN_OUT
-#    conda:
-#        "envs/trinotate.yaml"
-#    log:
-#        'logs/trinotate/hmmscan.log'
-#    shell:
-#        """
-#        hmmscan --cpu 36 \
-#            --domtblout {output.hits} \
-#            db/Pfam-A.hmm {input.aa} 1> {log} 2>&1
-#        """
-#
-#rule make_gene_trans_map:
-#    input:
-#        TXM_LONG_CLEAN
-#    output:
-#        GENE_TRANS_MAP
-#    conda:
-#        "envs/trinity.yaml"
-#    shell:
-#        """
-#        get_Trinity_gene_to_trans_map.pl {input} > {output}
-#        """
-#
-#rule trinotate_init:
-#    input:
-#        txm_nt = TXM_LONG_CLEAN,
-#        txm_aa = 'outputs/transdecoder/rhithro_txm_long_clean.fasta.transdecoder.pep',
-#        gtm = GENE_TRANS_MAP,
-#        sqlite = ancient('db/Trinotate.sqlite') #ignore timestamp. output is same as input so do wan't to run again
-#    output:
-#        touch(TRINOTATE_INIT)
-#    conda:
-#        "envs/trinotate.yaml"
-#    log:
-#        "logs/trinotate/trinotate_init.txt"
-#    shell:
-#        """
-#        Trinotate {input.sqlite} init --gene_trans_map {input.gtm} \
-#            --transcript_fasta {input.txm_nt} \
-#            --transdecoder_pep {input.txm_aa} 1> {log} 2>&1
-#        """
-#
-#rule trinotate_load:
-#    input:
-#        init_done = TRINOTATE_INIT,
-#        sqlite = ancient('db/Trinotate.sqlite'),
-#        blastp_sprot = 'outputs/trinotate/diamondp.sprot.tsv',
-#        blastx_sprot = 'outputs/trinotate/diamondx.sprot.tsv',
-#        blastp_trembl = 'outputs/trinotate/diamondp.trembl.tsv',
-#        blastx_trembl = 'outputs/trinotate/diamondx.trembl.tsv',
-#        hmmer = 'outputs/trinotate/hmmscan.out'
-#    output:
-#        touch(TRINOTATE_LOAD)
-#    conda:
-#        "envs/trinotate.yaml"
-#    log:
-#        "logs/trinotate/trinotate_load.txt"
-#    shell:
-#        """
-#        Trinotate {input.sqlite} \
-#            LOAD_swissprot_blastp \
-#            {input.blastp_sprot} 1> {log} 2>&1
-#        Trinotate {input.sqlite} \
-#            LOAD_swissprot_blastx \
-#            {input.blastx_sprot} 1>> {log} 2>&1
-#        Trinotate {input.sqlite} \
-#            LOAD_custom_blast \
-#            --outfmt6 {input.blastp_trembl} \
-#            --prog blastp \
-#            --dbtype blastp_trembl 1>> {log} 2>&1
-#        Trinotate {input.sqlite} \
-#            LOAD_custom_blast \
-#            --outfmt6 {input.blastx_trembl} \
-#            --prog blastx \
-#            --dbtype blastx_trembl 1>> {log} 2>&1
-#        Trinotate {input.sqlite} \
-#            LOAD_pfam \
-#            {input.hmmer} 1>> {log} 2>&1
-#        """
-#
-#rule trinotate_report:
-#    input:
-#        load_done = TRINOTATE_LOAD,
-#        sqlite = ancient('db/Trinotate.sqlite') 
-#    output:
-#        trinotate_out = TRINOTATE_ANNOT
-#    conda:
-#        "envs/trinotate.yaml"
-#    log:
-#        "logs/trinotate/trinotate_annot.txt"
-#    shell:
-#        """
-#        Trinotate {input.sqlite} \
-#            report \
-#            -E 1e-5 \
-#            > {output.trinotate_out} 2> {log}
-#        """
-#
-#rule trinotate_stats:
-#    input:
-#        TRINOTATE_ANNOT
-#    output:
-#        TRINOTATE_STATS
-#    conda:
-#        "envs/trinotate.yaml"
-#    log:
-#        "logs/trinotate/trinotate_stats.txt"
-#    shell:
-#        """
-#        count_table_fields.pl {input} > {output} 2> {log}
-#        """
-
 
 #rule clean: #clean up
 #    shell:

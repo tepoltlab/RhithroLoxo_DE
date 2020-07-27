@@ -54,26 +54,14 @@ blast_contam:
     queue: scavenger
     threads: 35
     mem: 100
-    time: 40
+    time: 100
 
 download_db:
     queue: scavenger
     threads: 1
     mem: 80
-    time: 240
+    time: 720
     
-diamond_db:
-    queue: scavenger
-    threads: 1
-    mem: 80
-    time: 240
-
-transdecoder:
-    queue: scavenger
-    threads: 1
-    mem: 20
-    time: 60
-
 prep_rhithro_ref:
     queue: scavenger
     threads: 16
@@ -81,7 +69,7 @@ prep_rhithro_ref:
     time: 60
 
 quant:
-    queue: scavenger
+    queue: compute
     threads: 16
     mem: 40
     time: 120
@@ -98,64 +86,15 @@ reformat_uniref90:
     mem: 80
     time: 120
 
-diamondx_annot:
+configure_EnTAP:
+    queue: compute
+    threads: 35
+    mem: 186
+    time: 240
+
+run_EnTAP:
     queue: scavenger
-    threads: 36
-    mem: 180
-    time: 1380
-    
-diamondp_annot:
-    queue: scavenger
-    threads: 36
-    mem: 180
-    time: 1380
-
-diamondx_xml:
-    queue: scavenger
-    threads: 36
-    mem: 180
-    time: 1380
-
-hmmscan:
-    queue: scavenger
-    threads: 36
-    mem: 180
-    time: 1380
-
-#rule loxo_txm:
-#    queue: compute
-#    threads: 35
-#    mem: 180
-#    time: 1440
-
-#salmon_index: 
-#    queue: compute
-#    threads: 1
-#    mem: 5
-#    time: 5
-#
-#salmon_quant: 
-#    queue:  compute
-#    threads: 1
-#    mem: 5
-#    time: 120
-#
-#salmon_merge:
-#    queue:  compute
-#    threads: 1
-#    mem: 5
-#    time: 1
-
-#diamond_db:
-#    queue: scavenger
-#    threads: 1
-#    mem: 80
-#    time: 240
-#    
-#diamond:
-#    queue: scavenger
-#    threads: 35
-#    mem: 180
-#    time: 600
-    
+    threads: 35
+    mem: 186
+    time: 1439
 
