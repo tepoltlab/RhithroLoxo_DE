@@ -98,3 +98,8 @@ run_EnTAP:
     mem: 186
     time: 1439
 
+quant_cat_final:
+    queue: scavenger
+    threads: 16
+    mem: 40
+    time: 60

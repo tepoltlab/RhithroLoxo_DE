@@ -39,12 +39,14 @@ RHITHRO_TXM_IDX = 'txms/rhithro/rhithro_txm_long_clean_clean.fasta.salmon_quasi.
 DE_SAMPLES = ['AP_C_1','AP_C_2','AP_C_3','AP_C_4','AP_C_5','AP_C_6','AP_P_1','AP_P_2','AP_P_3','AP_P_6','FP_C_10','FP_C_11','FP_C_12','FP_C_13','FP_C_5','FP_C_9','FP_P_10','FP_P_4','FP_P_5','FP_P_7','FP_P_8','FP_P_9','LA_C_1','LA_C_2','LA_C_3','LA_C_4','LA_C_6','LA_C_8','LA_F_1','LA_P_1','LA_P_2','MA_C_1','MA_C_2','MA_C_4','MD_C_10','MD_C_11','MD_C_12','MD_C_1','MD_C_4','MD_C_7','MD_F_4','MD_P_1','ML_C_10','ML_C_2','ML_C_3','ML_C_5','ML_C_7','ML_C_9','ML_P_1','ML_P_2','NH_C_11','NH_C_12','NH_C_13','NH_C_5','NH_C_8','NH_C_9','NH_P_1','NH_P_2','NH_P_3','NH_P_4','NH_P_5','NH_P_6','NJ_C_10','NJ_C_11','NJ_C_12','NJ_C_13','NJ_C_14','NJ_C_6','NJ_P_1','NJ_P_3','NJ_P_4','NJ_P_5','NJ_P_6','NJ_P_7','SC_C_12','SC_C_14','SC_C_2','SC_C_6','SC_C_7','SC_C_9','SC_P_1','SC_P_2','SC_P_3']
 QUANT_OUT = expand('outputs/quant/{wc1}/quant.sf', wc1=DE_SAMPLES)
 QUANT_MAT = expand('outputs/quant/salmon.isoform.{wc1}', wc1 = ['counts.matrix','TPM.not_cross_norm'])
-
+FINAL_QUANT_CAT = 'outputs/trinity_stats/final_rhithro_txm_quant/quant.sf'
+FINAL_ExN50 = 'outputs/trinity_stats/final_rhithro_txm_quant/ExN50.stats'
+FINAL_N50 = 'outputs/trinity_stats/final_rhithro_txm_quant/N50.txt' 
 
 ## GET SNAKEMAKEY
 
 rule all:
-    input: FASTQC_ZIP, FASTQC_HTML, LOXO_DB, LOXO_BLAST_RESULTS, CONTAM_LIST, CONTAM_RATES, CLEANED_READS, RHITHRO_CLEAN_CAT, RHITHRO_TXMS, RHITHRO_TXM_GENETRANSMAPS, PRELIM_TXM_IDXS, QUANT_CAT, EXN50, N50, TXM_LONG, DIRTY_CHUNKS, BLAST_CONTAM, BLAST_CONTAM_MERGED, BLAST_CONTAM_LIST, DOWNLOAD_DB_OUT, UNIREF_REFORMAT, ENTAP_CONFIG_OUT, TXM_LONG_CLEAN, ENTAP_ANNOT_OUT, ENTAP_CONTAM, TXM_LONG_CLEAN_CLEAN, RHITHRO_TXM_IDX, QUANT_OUT, QUANT_MAT,
+    input: FASTQC_ZIP, FASTQC_HTML, LOXO_DB, LOXO_BLAST_RESULTS, CONTAM_LIST, CONTAM_RATES, CLEANED_READS, RHITHRO_CLEAN_CAT, RHITHRO_TXMS, RHITHRO_TXM_GENETRANSMAPS, PRELIM_TXM_IDXS, QUANT_CAT, EXN50, N50, TXM_LONG, DIRTY_CHUNKS, BLAST_CONTAM, BLAST_CONTAM_MERGED, BLAST_CONTAM_LIST, DOWNLOAD_DB_OUT, UNIREF_REFORMAT, ENTAP_CONFIG_OUT, TXM_LONG_CLEAN, ENTAP_ANNOT_OUT, ENTAP_CONTAM, TXM_LONG_CLEAN_CLEAN, RHITHRO_TXM_IDX, QUANT_OUT, QUANT_MAT, FINAL_QUANT_CAT, FINAL_ExN50, FINAL_N50,
 
 #get fastqc results on all samples
 
@@ -443,7 +445,7 @@ rule reformat_uniref90:
 
 rule configure_EnTAP:
     input:
-        UNIREF_REFORMAT
+        UNIREF_REFORMAT #just to ensure that the databases have been downloaded and uniref reformated
     output:
         ENTAP_CONFIG_OUT
     params:
@@ -581,6 +583,58 @@ rule quant_mat:
             --cross_sample_norm none \
             --name_sample_by_basedir \
             --quant_files ../../{input.quant_paths} 1> ../../{log} 2>&1
+        """
+
+#now we are going to repeat the transcriptome statistics step to get the final figures on our transcriptome.
+#first we'll have to perform quantification using the concatenated clean samples, as before
+
+rule quant_cat_final:
+    input:
+        txm = TXM_LONG_CLEAN_CLEAN,
+        cat = RHITHRO_CLEAN_CAT,
+        idx = RHITHRO_TXM_IDX
+    conda:
+        "envs/trinity.yaml"
+    output:
+        quant = FINAL_QUANT_CAT
+    log:
+        'logs/trinity/quant_cat_final.log'
+    shell:
+        """
+        mkdir -p outputs/trinity_stats/final_rhithro_txm_quant/
+        
+        align_and_estimate_abundance.pl --transcripts {input.txm} \
+            --seqType fq \
+            --single {input.cat} \
+            --est_method salmon \
+            --output_dir outputs/trinity_stats/final_rhithro_txm_quant/ \
+            --SS_lib_type R \
+            --thread_count 16 \
+            --fragment_length 150 \
+            --fragment_std 20 \
+            --salmon_add_opts "--validateMappings " 1> {log} 2>&1 
+        """
+
+rule txm_stats_final:
+    input:
+        quant = FINAL_QUANT_CAT
+    conda:
+        "envs/trinity.yaml"
+    params:
+        dir = directory('outputs/trinity_stats/final_rhithro_txm_quant/')
+    output:
+        ExN50 = FINAL_ExN50,
+        N50 = FINAL_N50
+    log:
+        'logs/trinity/txm_stats_final.log'
+    shell:
+        """
+        cd {params.dir}
+        abundance_estimates_to_matrix.pl --est_method salmon \
+            --gene_trans_map none quant.sf
+        contig_ExN50_statistic.pl salmon.isoform.TPM.not_cross_norm \
+            ../../../txms/rhithro/rhithro_txm_long_clean_clean.fasta | tee ExN50.stats
+        TrinityStats.pl ../../../txms/rhithro/rhithro_txm_long_clean_clean.fasta > N50.txt 
         """
 
 #rule clean: #clean up

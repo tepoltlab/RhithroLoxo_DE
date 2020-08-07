@@ -181,3 +181,10 @@ sbatch `run_EnTAP.sh`
 
 This creates a myriad of output files in the `EnTAP/entap_outfiles` directory. The eggNOG mapping results are reformatted for input into `GO_MWU` using the script `EnTAP2GO.py` in the `scripts/` folder.
 
+This counts the number of contigs with COG hit (-1 b/c of header)
+
+awk -F "\t" '$25 ~ /[[:alnum:]]/ {print $25}' final_annotations_no_contam_lvl0.tsv | wc -l
+
+This counts the number of contigs with at least one GO term (-1 b/c of header)
+
+awk -F "\t" '$33 ~ /[[:alnum:]]/ || $34 ~ /[[:alnum:]]/ || $35 ~ /[[:alnum:]]/ {print $34}' final_annotations_no_contam_lvl0.tsv | wc -l
