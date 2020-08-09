@@ -13,7 +13,7 @@ attached base packages:
  [8] datasets  methods   base     
 
 other attached packages:
- [1] UpSetR_1.4.0                tidyr_1.1.0                
+ [1] tidyr_1.1.0                 UpSetR_1.4.0               
  [3] cowplot_1.0.0               pheatmap_1.0.12            
  [5] RColorBrewer_1.1-2          VennDiagram_1.6.20         
  [7] futile.logger_1.4.3         ashr_2.2-39                
