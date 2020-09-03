@@ -8,16 +8,26 @@ import re
 
 Usage = "EnTAP2GO.py path_to_final_annotations_lvl0.tsv path_to_output evalue_threshold[num] filter_contamination?[y/n] eggNOG_taxonomic_scope[opt]"
 
+#recode to use argparse at some point
 if (len(sys.argv) < 5):
 	print("See usage:")
 	print(Usage)
 	exit()
-else:
+elif (len(sys.argv) == 5):
+    infile = sys.argv[1]
+    outfile = sys.argv[2]
+    eval_cutoff = float(sys.argv[3])
+    exclude_contam = sys.argv[4]
+elif (len(sys.argv) == 6):
     infile = sys.argv[1]
     outfile = sys.argv[2]
     eval_cutoff = float(sys.argv[3])
     exclude_contam = sys.argv[4]
     eggDB = sys.argv[5]
+else:
+	print("See usage:")
+	print(Usage)
+	exit()
 
 print("Excluding matches above eval of " + str(eval_cutoff))
 
@@ -29,7 +39,8 @@ else:
     print("filter_contamination argument must be 'y' or 'n', case sensitive")
     exit()
     
-if eggDB == None:
+if "eggDB" not in locals():
+    eggDB = None
     print("No eggNOG taxonomic scope selected. Retrieving hits from any matching COGs")
 else:
     print("Restricting GO term retrieval to matches against " + eggDB + " COGs")
@@ -44,7 +55,7 @@ with open(infile, "r") as f_in:
                 continue #skip line
             elif exclude_contam == "y" and cols[16] == "Yes": #if contaminant exclusion specified and transcript is a contaminant
                 continue #skip line
-            elif cols[28] != eggDB: #if COG isn't of taxonomic scope specified
+            elif eggDB != None and cols[28] != eggDB: #if taxonomic scope is specified and COG doesn't match
                 continue
             else:
                 ID = cols[0] #get first as ID
