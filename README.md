@@ -8,6 +8,18 @@ The analysis starts from previously demultiplexed, trimmed, and cleaned 50bp, si
 
 All steps in the pipeline were carried out on Poseidon, the high performance cluster (HPC) at Woods Hole Oceanographic Institution. 
 
+### NOTES TO ADD!
+
+NEED TO MAKE SOME CHANGES TO THIS README.md TO REFLECT RECENT CHANGES TO WORKFLOW: ENTAP WRITTEN INTO SNAKEMAKE PIPELINE, FINAL TXM STATS AFTER CONTAM REMOVAL, ETC.
+
+TXM STATS
+MD/FP JUSTIFICATION FOR REMOVAL
+
+"FP was excluded because although it is conventionally considered as part of L. panopaei’s native range, this is based on a single historical record from before the resolution of the cryptic species complex, likely in a different panopeid species misidentified as an ER host (C.K.T., pers. obs.). Because MD was used as the source of L. panopaei larvae in the experimental infections, we excluded this site to avoid potentially confounding signatures of local adaptation of the parasite to MD hosts. After the removal of sample outliers earlier, no crabs remained from MA."
+
+"We could just say we excluded it either because a) my prior survey found NO ER clade LP at that site,  and/or b) it is a highly divergent genetic lineage"
+
+
 ### Reproducibility statement
 
 This analysis was performed with ease of reproducibility in mind, both for my own sake in organizing the steps of the pipeline and for those interested in understanding the nuts and bolts or even replicating the results independently. That being said, there are some steps that may be influenced by idiosyncracies of the configuration of the Poseidon HPC, specific versions of software, or release dates of reference sequence databases. 
