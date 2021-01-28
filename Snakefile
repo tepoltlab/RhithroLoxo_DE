@@ -636,9 +636,3 @@ rule txm_stats_final:
             ../../../txms/rhithro/rhithro_txm_long_clean_clean.fasta | tee ExN50.stats
         TrinityStats.pl ../../../txms/rhithro/rhithro_txm_long_clean_clean.fasta > N50.txt 
         """
-
-#rule clean: #clean up
-#    shell:
-#        """
-#
-#        """
